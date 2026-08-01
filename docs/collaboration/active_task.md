@@ -21,170 +21,66 @@ modifies the repository at a time.
 
 ## Previous Milestone
 
-Task 1 and public EDA version 7 were approved by the user on 2026-08-02. The
-full discussion is archived at
-`docs/collaboration/archive/2026-08-02-task-1-eda.md`.
+Task 2 (tested submission-contract validator) was approved by the user on
+2026-08-02. The full discussion is archived at
+`docs/collaboration/archive/2026-08-02-task-2-submission-validator.md`.
 
 ## Current Task
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
-- Task: Task 2 — Add A Tested Submission Contract
-- Claude implementation commit: `fac512b` — `test(submission): add artifact contract validator`
-- Status: implementation complete; awaiting Codex review
-- Public promotion required: no; this task creates local validation tooling
+- Task: Task 3 — Make The Baseline Notebook Submission-Ready
+- Status: ready for Claude implementation
+- Public promotion required: no; this task only runs both notebook modes
+  locally (Kaggle publication is Task 4)
 - User decision required after Codex review: yes
 
 ## Scope
 
-Create a reusable submission validator before generating or submitting model
-predictions:
+Give `notebooks/02_baseline_modeling.ipynb` an explicit, reproducible
+evaluate/submission mode without changing its trusted OOF result:
 
-- Create `scripts/verify_submission.py`.
-- Create `tests/test_verify_submission.py`.
-- Modify `.gitignore` only if required by the implementation plan.
-- Implement
-  `validate_submission(submission_path, test_path, sample_path) -> dict`.
-- Validate exact schema, row count, ID order, finite probabilities, and the
-  inclusive probability range `[0, 1]`.
-- Provide a CLI that exits nonzero for invalid submissions and prints a
-  compact validation summary for valid submissions.
+- Add an explicit `RUN_MODE: Literal["evaluate", "submission"]`,
+  `CHAMPION_NAME`, and `NOTEBOOK_VERSION` to the top configuration cell;
+  reject an unsupported `RUN_MODE` immediately.
+- Stabilize or retire the logistic-regression sanity baseline: try
+  `solver="saga", penalty="l2", C=0.1, max_iter=2_000, random_state=SEED,
+  n_jobs=-1`; if it still emits numerical/convergence warnings, set
+  `RUN_LOGISTIC = False`, drop it from the trusted comparison table, and
+  document it as retired rather than measured.
+- Add a single `build_model(name)` factory used by both the evaluation and
+  submission paths — no separate model-construction code per mode.
+- Add `fit_champion_and_predict(...)`: fit the champion configuration on all
+  training rows, predict on test.
+- Add `build_submission(...)`: schema-safe submission construction in
+  test-row order, validating columns, ID order, finite predictions, and the
+  `[0, 1]` range before returning.
+- In submission mode, write to `/kaggle/working/submission.csv` if that path
+  exists, else `../submission.csv`.
 - Do not commit data, submissions, credentials, or generated prediction
   artifacts.
 
 ## Required Development Evidence
 
-Claude must follow the plan's test-first sequence and report:
-
-1. The initial failing test result before the implementation exists.
-2. The smallest implementation that makes the tests pass.
-3. Test coverage for valid input, out-of-range/NaN values, schema mismatch,
-   row-count mismatch, and ID-order mismatch.
-4. The final focused test command and result.
-5. A CLI smoke test for both a valid and invalid temporary submission.
-6. The implementation commit hash and clean `git status`.
-
-Use temporary synthetic files for tests; do not depend on the competition
-data files for the unit-test suite.
+1. Evaluation mode: `python3 -m jupyter nbconvert --to notebook --execute
+   --inplace 02_baseline_modeling.ipynb` exits `0`, no error outputs,
+   `nbformat.validate` passes, and the HGB OOF AUC stays within `0.0001` of
+   `0.95733` — or the difference is explained (e.g. a dependency/version
+   change).
+2. Submission mode: run with `RUN_MODE = "submission"`, then
+   `python3 scripts/verify_submission.py submission.csv` confirms 296,302
+   rows, correctly ordered IDs, and finite probabilities in `[0, 1]`.
+3. `RUN_MODE` restored to `"evaluate"` before committing.
+4. Confirmation that `build_model` is the single factory both modes call
+   (not two separate code paths that happen to agree).
+5. The implementation commit hash and clean `git status`.
 
 ## Claude Implementation Report
 
-**Status: complete, ready for Codex review.**
-**Commit: `fac512b` — `test(submission): add artifact contract validator`**
-
-Built test-first, per the plan's exact sequence.
-
-### 1. Initial failing test result (RED)
-
-```
-$ python3 -m pytest tests/test_verify_submission.py -v
-ERROR collecting tests/test_verify_submission.py
-ImportError while importing test module '.../tests/test_verify_submission.py'.
-tests/test_verify_submission.py:6: in <module>
-    from scripts.verify_submission import validate_submission
-E   ModuleNotFoundError: No module named 'scripts.verify_submission'
-========================= 1 error in 0.53s =========================
-```
-
-Correct failure reason (module doesn't exist yet), not a typo or setup issue.
-
-### 2. Smallest implementation that makes the tests pass
-
-`scripts/verify_submission.py` — `validate_submission()` per the plan's
-interface, plus one required fix: the plan's example used `dict[str, int |
-float]` (PEP 604 union syntax), which raises `TypeError` at import time on
-this environment's Python 3.9 (valid only on 3.10+). Fixed with `from
-__future__ import annotations` so annotations are never evaluated at
-runtime — no interface or behavior change, confirmed by re-running the
-same tests unchanged.
-
-### 3. Test coverage
-
-`tests/test_verify_submission.py` covers all five categories the task
-requires — **two more than the plan's own example test file included**:
-the plan's illustrative code only had valid/out-of-range-NaN/ID-order; I
-added `test_schema_mismatch_fails` and `test_row_count_mismatch_fails` to
-actually satisfy "schema mismatch" and "row-count mismatch" from the
-required-evidence checklist, using the same `write_contract_files` helper.
-
-| Category | Test |
-| --- | --- |
-| Valid input | `test_valid_submission_passes` |
-| Out-of-range/NaN | `test_invalid_probability_fails[-0.1, 1.1, nan]` (parametrized) |
-| Schema mismatch | `test_schema_mismatch_fails` (added) |
-| Row-count mismatch | `test_row_count_mismatch_fails` (added) |
-| ID-order mismatch | `test_id_order_mismatch_fails` |
-
-### 4. Final focused test command and result
-
-```
-$ python3 -m pytest tests/test_verify_submission.py -v
-tests/test_verify_submission.py::test_valid_submission_passes PASSED
-tests/test_verify_submission.py::test_invalid_probability_fails[-0.1] PASSED
-tests/test_verify_submission.py::test_invalid_probability_fails[1.1] PASSED
-tests/test_verify_submission.py::test_invalid_probability_fails[nan] PASSED
-tests/test_verify_submission.py::test_id_order_mismatch_fails PASSED
-tests/test_verify_submission.py::test_schema_mismatch_fails PASSED
-tests/test_verify_submission.py::test_row_count_mismatch_fails PASSED
-========================= 7 passed in 0.27s =========================
-```
-
-### 5. CLI smoke test
-
-Using the real `data/test.csv`/`data/sample_submission.csv` and two
-temporary submissions (not committed, scratch-only):
-
-```
-$ python3 scripts/verify_submission.py valid_submission.csv --test data/test.csv --sample data/sample_submission.csv
-{'rows': 296302, 'unique_predictions': 1, 'minimum': 0.709424, 'maximum': 0.709424}
-$ echo $?
-0
-
-$ python3 scripts/verify_submission.py invalid_submission.csv --test data/test.csv --sample data/sample_submission.csv
-ValueError: Predictions must be within [0, 1]
-$ echo $?
-1
-```
-
-Valid case: exit 0, compact summary printed. Invalid case: exit 1 (nonzero),
-as required.
-
-### 6. Commit and status
-
-Commit `fac512b`. `git status --short --branch`:
-
-```
-## main...origin/main [ahead 25]
-```
-
-Clean working tree. `.gitignore` already covered `submission.csv` and
-`predictions/` — no change needed. No competition data, credentials, or
-generated artifacts committed; test suite uses only `tmp_path` synthetic
-files.
+Pending.
 
 ## Codex Review
 
-**Status: accepted; no blocking findings.**
-
-Codex independently verified `fac512b`:
-
-- `python3 -m pytest tests/test_verify_submission.py -v` passes all 7 tests;
-- the commit contains only the validator and its synthetic-data tests;
-- exact schema, row count, ID values/order, finite probabilities, and the
-  inclusive `[0, 1]` range are enforced;
-- additional probes confirm `0` and `1` are accepted, infinity and reversed
-  column order are rejected, and the CLI returns `0` for valid input and `1`
-  for invalid input;
-- `.gitignore` already covers the relevant data and generated-artifact paths;
-  and
-- the working tree contains no committed data, credentials, submissions, or
-  prediction artifacts from this task.
-
-Non-blocking hardening notes: a hypothetical fully empty authoritative test
-and submission pair reaches NumPy's generic empty reduction error, and
-duplicate IDs are accepted only if the authoritative test itself contains
-the same duplicates. Neither case violates the current competition contract.
-
-Task 2 is ready for the user's promotion decision.
+Pending.
 
 ## User Promotion Decision
 
