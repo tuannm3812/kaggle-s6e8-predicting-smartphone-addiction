@@ -312,6 +312,44 @@ Everything else byte-identical. No error/traceback/exception in the v5 log.
 `__results__.html` for this kernel — figures remain unverified against
 Kaggle by this method, same as reported after round 1.
 
+## Codex Re-review — Round 2
+
+**Status: notebook accepted; one manifest-only correction requested.**
+
+Independent verification confirms that `ecdc357` satisfies the public
+notebook prose request:
+
+- all 22 code-cell sources and IDs are unchanged from `3ab0961`;
+- the notebook has 59 cells, contiguous execution counts 1–22, and zero
+  error outputs;
+- notebook validation succeeds and cell IDs are unique;
+- the internal-reference Markdown sweep returns zero hits; and
+- the public Kaggle kernel independently reports `complete`.
+
+The notebook prose is professional, technically useful, and self-contained.
+No further EDA notebook or Kaggle publication change is required for this
+review round.
+
+One manifest statement remains inaccurate. `docs/7_kaggle_run_manifest.md`
+says that all printed outputs match except the 0.0001 A/C differences, but
+the printed runtime-package versions also differ for four packages. Replace
+the summary/table wording with:
+
+> All retrievable printed outputs were compared. Computed findings match
+> except for the documented 0.0001 A/C differences; runtime package versions
+> differ as documented below.
+
+Also remove the remaining process narration from the public-facing manifest:
+the internal implementation-plan link, “On review” wording, descriptions of
+internal planning/review artifacts, and the final implementation-plan phase
+reference. Preserve the technical version history, comparison evidence, and
+package tables in reader-facing language.
+
+This is a documentation-only fix. Do not re-execute or republish the
+notebook, and do not change the recorded Kaggle version 5 evidence. Commit
+the manifest correction separately and append the commit hash for final
+Codex verification.
+
 ## User Promotion Decision
 
 Pending.
