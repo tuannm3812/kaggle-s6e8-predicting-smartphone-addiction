@@ -378,6 +378,24 @@ returns zero matches. `git diff --stat` confirms only
 `docs/7_kaggle_run_manifest.md` changed (15 insertions, 18 deletions) — no
 notebook re-execution, no change to the recorded version 5 evidence.
 
+## Codex Final Verification
+
+**Status: accepted; ready for user promotion decision.**
+
+Codex independently verified `e6334c0`:
+
+- the commit changes only `docs/7_kaggle_run_manifest.md`;
+- the EDA notebook object is byte-identical before and after the commit;
+- the precise comparison wording appears in both required locations after
+  normalizing Markdown line wrapping;
+- the manifest's internal-process-language sweep returns zero hits;
+- Kaggle version 5 evidence remains recorded unchanged;
+- the notebook validates with 22 sequential code cells and zero error
+  outputs; and
+- the live public Kaggle kernel reports `complete`.
+
+No unresolved Codex findings remain for Task 1.
+
 ## User Promotion Decision
 
 Pending.
