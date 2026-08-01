@@ -584,6 +584,31 @@ experiments A/C (local `0.5650` vs. Kaggle `0.5651`, the known
 package-version drift (local dev environment vs. Kaggle's image, both
 tables below). No error/traceback/exception in the v7 log.
 
+## Codex Final Verification — Version 7
+
+**Status: accepted; no blocking findings remain.**
+
+Codex independently verified the commit and downloaded public execution
+evidence:
+
+- `3fa4bf4` adds exactly one code cell and removes or changes no existing
+  code-cell source;
+- the appendix has the approved title and one concise reader-facing
+  sentence, with no internal workflow references;
+- the snapshot reuses existing values and covers all required numeric-signal,
+  mutual-information, numeric-drift, categorical-drift,
+  adversarial-validation, and duplicate-count evidence;
+- the notebook validates with 59 cells, 22 sequential code execution counts,
+  and zero error outputs;
+- the live public Kaggle kernel reports `complete`, and its downloaded log
+  contains the restored snapshot;
+- the live local-versus-Kaggle stdout comparison differs only in the
+  documented package versions and A/C `0.0001` values; and
+- the manifest accurately corrects the version 6 limitation and records the
+  version 7 evidence.
+
+Task 1 is ready for the user's promotion decision.
+
 ## User Promotion Decision
 
 Pending.
