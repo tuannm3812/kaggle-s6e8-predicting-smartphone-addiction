@@ -91,7 +91,88 @@ Pixel-level figure comparison is not required. Do not amend `00e00d9`.
 
 ## Claude Fix Report
 
-Pending.
+**Status: fix round complete, ready for Codex re-review.**
+**Commit: `3ab0961` — `fix(eda): close Task 1 verification gap per Codex review`** (does not amend `2fea5f5`).
+
+### What changed
+
+1. Added `notebooks/01_eda.ipynb` Section 11, "Verification Summary" — one
+   `print(json.dumps(...))` cell (new cell `38ac16b6`, header `ab14d735`)
+   that reuses variables already computed earlier in the notebook (no
+   recomputation) to report: numeric signal ranking (univariate AUC, all 9
+   features), mutual information (all 12 features), numeric drift KS
+   statistics (all 9), categorical drift chi-square (all 3), adversarial-
+   validation AUCs (A/B/C), and duplicate counts. The former Section 11
+   ("Runtime Environment") is renumbered to Section 12 (cell `ca45a8f5`) —
+   the only other cell touched.
+2. Rewrote `docs/7_kaggle_run_manifest.md`: narrowed "outputs match
+   exactly" / "all outputs still matched exactly" to the precise claim the
+   evidence supports (see comparison below); replaced both references to
+   `.superpowers/sdd/2026-08-01-s6e8-implementation-plan/task-1-brief.md`
+   with `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
+   (Task 1); added the v4 version-history row and full comparison.
+
+### Commands run
+
+```
+cd notebooks && python3 -m jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb   # exit 0
+cd .. && python3 -c "import nbformat; nbformat.validate(nbformat.read('notebooks/01_eda.ipynb', 4))"  # exit 0
+# 59 cells, 0 error outputs (checked via output_type == "error" scan)
+python3 -c "import json; ...assert is_private is False; assert enable_internet is False; ..."  # exit 0, unchanged
+scripts/push_kaggle_kernel.sh eda   # "Kernel version 4 successfully pushed."
+kaggle kernels status tuannm3812/smartphone-addiction-eda   # polled every 15s: RUNNING x13, then COMPLETE (~3m24s wall)
+kaggle kernels output tuannm3812/smartphone-addiction-eda -p <tmp>   # log only, same CLI limitation as before
+kaggle kernels list -m --search smartphone-addiction-eda   # lastRunTime 2026-08-01 12:52:54.077000
+diff <local stdout stream> <Kaggle v4 log stdout stream>   # see result below
+```
+
+### Public version
+
+https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda — **version 4**, status `complete`, runtime ~200s (15.8s–200.2s per log timestamps).
+
+### Local-vs-Kaggle comparison (the actual diff, not a summary claim)
+
+`diff` of every `print()`-based output, local run vs. Kaggle v4 log:
+
+```
+53c53
+< A_raw_features_only              OOF AUC = 0.5650
+---
+> A_raw_features_only              OOF AUC = 0.5651
+55c55
+< C_raw_plus_indicators            OOF AUC = 0.5650
+---
+> C_raw_plus_indicators            OOF AUC = 0.5651
+99c99
+<     "A_raw_features_only": 0.565,
+---
+>     "A_raw_features_only": 0.5651,
+101c101
+<     "C_raw_plus_indicators": 0.565
+---
+>     "C_raw_plus_indicators": 0.5651
+109c109,110
+< {numpy 2.4.6, pandas 2.3.3, scikit-learn 1.9.0, scipy 1.17.1, matplotlib 3.11.1, seaborn 0.13.2}
+---
+> {numpy 2.0.2, pandas 2.3.3, scikit-learn 1.6.1, scipy 1.16.3, matplotlib 3.10.0, seaborn 0.13.2}
+```
+
+Everything else — target counts, categorical breakdowns/proportions,
+duplicate counts, all 9 numeric-signal AUCs, all 12 mutual-information
+values, all 9 KS statistics, all 3 chi-square statistics, and adversarial
+experiment B — is byte-identical. Two differences, both already understood:
+adversarial AUCs for experiments A/C differ by `0.0001` (local `0.5650` vs.
+Kaggle `0.5651`), consistent with the `HistGradientBoostingClassifier`
+cross-run non-determinism already documented in
+`docs/archive/4_codex_claude_review_log.md` §15.4; package versions differ
+as expected (unpinned local dev environment vs. Kaggle's image).
+
+### Concerns unchanged from the original report
+
+`kaggle kernels output` still does not return `__notebook__.ipynb`/
+`__results__.html` for this kernel via this CLI version (1.7.4.5) — figures
+remain unverified against Kaggle by this method. Per this review's scope
+("Pixel-level figure comparison is not required"), not treated as blocking.
 
 ## Codex Re-review
 
