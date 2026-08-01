@@ -29,7 +29,8 @@ full discussion is archived at
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 2 — Add A Tested Submission Contract
-- Status: ready for Claude implementation
+- Claude implementation commit: `fac512b` — `test(submission): add artifact contract validator`
+- Status: implementation complete; awaiting Codex review
 - Public promotion required: no; this task creates local validation tooling
 - User decision required after Codex review: yes
 
@@ -66,6 +67,101 @@ Use temporary synthetic files for tests; do not depend on the competition
 data files for the unit-test suite.
 
 ## Claude Implementation Report
+
+**Status: complete, ready for Codex review.**
+**Commit: `fac512b` — `test(submission): add artifact contract validator`**
+
+Built test-first, per the plan's exact sequence.
+
+### 1. Initial failing test result (RED)
+
+```
+$ python3 -m pytest tests/test_verify_submission.py -v
+ERROR collecting tests/test_verify_submission.py
+ImportError while importing test module '.../tests/test_verify_submission.py'.
+tests/test_verify_submission.py:6: in <module>
+    from scripts.verify_submission import validate_submission
+E   ModuleNotFoundError: No module named 'scripts.verify_submission'
+========================= 1 error in 0.53s =========================
+```
+
+Correct failure reason (module doesn't exist yet), not a typo or setup issue.
+
+### 2. Smallest implementation that makes the tests pass
+
+`scripts/verify_submission.py` — `validate_submission()` per the plan's
+interface, plus one required fix: the plan's example used `dict[str, int |
+float]` (PEP 604 union syntax), which raises `TypeError` at import time on
+this environment's Python 3.9 (valid only on 3.10+). Fixed with `from
+__future__ import annotations` so annotations are never evaluated at
+runtime — no interface or behavior change, confirmed by re-running the
+same tests unchanged.
+
+### 3. Test coverage
+
+`tests/test_verify_submission.py` covers all five categories the task
+requires — **two more than the plan's own example test file included**:
+the plan's illustrative code only had valid/out-of-range-NaN/ID-order; I
+added `test_schema_mismatch_fails` and `test_row_count_mismatch_fails` to
+actually satisfy "schema mismatch" and "row-count mismatch" from the
+required-evidence checklist, using the same `write_contract_files` helper.
+
+| Category | Test |
+| --- | --- |
+| Valid input | `test_valid_submission_passes` |
+| Out-of-range/NaN | `test_invalid_probability_fails[-0.1, 1.1, nan]` (parametrized) |
+| Schema mismatch | `test_schema_mismatch_fails` (added) |
+| Row-count mismatch | `test_row_count_mismatch_fails` (added) |
+| ID-order mismatch | `test_id_order_mismatch_fails` |
+
+### 4. Final focused test command and result
+
+```
+$ python3 -m pytest tests/test_verify_submission.py -v
+tests/test_verify_submission.py::test_valid_submission_passes PASSED
+tests/test_verify_submission.py::test_invalid_probability_fails[-0.1] PASSED
+tests/test_verify_submission.py::test_invalid_probability_fails[1.1] PASSED
+tests/test_verify_submission.py::test_invalid_probability_fails[nan] PASSED
+tests/test_verify_submission.py::test_id_order_mismatch_fails PASSED
+tests/test_verify_submission.py::test_schema_mismatch_fails PASSED
+tests/test_verify_submission.py::test_row_count_mismatch_fails PASSED
+========================= 7 passed in 0.27s =========================
+```
+
+### 5. CLI smoke test
+
+Using the real `data/test.csv`/`data/sample_submission.csv` and two
+temporary submissions (not committed, scratch-only):
+
+```
+$ python3 scripts/verify_submission.py valid_submission.csv --test data/test.csv --sample data/sample_submission.csv
+{'rows': 296302, 'unique_predictions': 1, 'minimum': 0.709424, 'maximum': 0.709424}
+$ echo $?
+0
+
+$ python3 scripts/verify_submission.py invalid_submission.csv --test data/test.csv --sample data/sample_submission.csv
+ValueError: Predictions must be within [0, 1]
+$ echo $?
+1
+```
+
+Valid case: exit 0, compact summary printed. Invalid case: exit 1 (nonzero),
+as required.
+
+### 6. Commit and status
+
+Commit `fac512b`. `git status --short --branch`:
+
+```
+## main...origin/main [ahead 25]
+```
+
+Clean working tree. `.gitignore` already covered `submission.csv` and
+`predictions/` — no change needed. No competition data, credentials, or
+generated artifacts committed; test suite uses only `tmp_path` synthetic
+files.
+
+## Codex Review
 
 Pending.
 
