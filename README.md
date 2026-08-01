@@ -1,7 +1,7 @@
 # Predicting Smartphone Addiction
 
 [![Kaggle Competition](https://img.shields.io/badge/Kaggle-Playground%20Series%20S6E8-20BEFF?logo=kaggle&logoColor=white)](https://www.kaggle.com/competitions/playground-series-s6e8)
-[![Modeling Phase](https://img.shields.io/badge/Modeling%20Phase-EDA%20Complete-blue)](docs/2_implementation_plan.md)
+[![Modeling Phase](https://img.shields.io/badge/Modeling%20Phase-Baseline%20Complete-blue)](docs/2_implementation_plan.md)
 [![Python](https://img.shields.io/badge/Python-3-3776AB?logo=python&logoColor=white)](requirements.txt)
 
 Kaggle Playground Series S6E8 project for predicting smartphone addiction:
@@ -13,13 +13,17 @@ validation checks, leaderboard submissions, and next-step strategy.
 
 ## Status
 
-Planning and EDA complete (2026-08-01); baseline modeling not yet started.
-Deadline: **2026-08-31 23:59 UTC**. Evaluation metric confirmed as ROC AUC.
-See `docs/2_implementation_plan.md` for the full phased plan,
-`docs/1_instructions.md` for competition facts, and `docs/3_eda_insights.md`
-for EDA findings. `docs/4_codex_claude_review_log.md` records an in-progress
-Codex/Claude collaborative review of the plan and EDA before baseline
-modeling starts.
+Planning, EDA, and baseline modeling complete (2026-08-01); Phase 3
+(tuning/ensemble) not yet started. Deadline: **2026-08-31 23:59 UTC**.
+Evaluation metric confirmed as ROC AUC. Current best OOF AUC: **0.9573**
+(untuned `HistGradientBoostingClassifier` — see
+`docs/6_baseline_modeling.md` for why this isn't yet a model-family
+verdict). See `docs/2_implementation_plan.md` for the full phased plan,
+`docs/1_instructions.md` for competition facts, `docs/3_eda_insights.md` for
+EDA findings, and `docs/5_source_dataset_provenance.md` for the likely
+source-dataset investigation. `docs/4_codex_claude_review_log.md` records
+the Codex/Claude collaborative review that shaped the EDA methodology and
+Phase 3 scope.
 
 ## Repository Structure
 

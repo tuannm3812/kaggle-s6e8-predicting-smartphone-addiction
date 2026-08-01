@@ -80,7 +80,24 @@ recovered target-generation rule (the source's `addicted_label` is a
 deterministic collapse of a 4-level severity scale) that sets modeling
 expectations without adding a usable feature.
 
-## Phase 2 — Baseline Modeling (`notebooks/02_baseline_modeling.ipynb`, by 2026-08-08)
+## Phase 2 — Baseline Modeling (`notebooks/02_baseline_modeling.ipynb`, by 2026-08-08) — done 2026-08-01
+
+Executed end-to-end (0 errors); full results in `docs/6_baseline_modeling.md`.
+Headline finding: the untuned sklearn `HistGradientBoostingClassifier`
+sanity baseline (OOF AUC 0.9573) currently beats the untuned LightGBM/
+CatBoost "strong models" (best 0.9553) — **not** a model-family verdict,
+since none were tuned to comparable settings; it directly motivates Phase
+3's hand-designed search rather than skipping to a model choice. Two
+ablations resolved cleanly: `_is_missing` flags add nothing on top of
+native NaN handling (drop them), and class-weight balancing shows no AUC
+benefit (default to unweighted). Engineered features show a small positive
+delta smaller than fold-to-fold noise — carried into Phase 3 as an open
+candidate, not yet a confirmed win. Logistic regression hit solver
+numerical instability — noted, not blocking, not investigated further
+(sanity floor, not a candidate).
+
+Original plan (kept for reference; the steps below were followed as
+written):
 
 1. **Validation:** `StratifiedKFold(n_splits=5, shuffle=True,
    random_state=<seed>)` on `addicted_label`. Report OOF AUC per fold and
