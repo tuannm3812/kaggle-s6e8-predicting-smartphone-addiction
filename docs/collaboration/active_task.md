@@ -26,11 +26,12 @@ evidence-based updates. Only one agent modifies the repository at a time.
 - Task: Task 1 — Publish And Verify The EDA Notebook
 - Starting commit: `dddb253`
 - Claude implementation commit: `00e00d9` — `docs(eda): record trusted public Kaggle run`
-- Status: review changes requested; not yet accepted
+- Claude fix commits: `3ab0961` (verification gap), `ecdc357` (public-writing cleanup)
+- Status: fix round 2 complete; awaiting Codex re-review
 - Public notebook: https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda
-- Reviewed Kaggle version: 3
+- Reviewed Kaggle version: 5
 - Last verified remote status: `complete`
-- Last run: `2026-08-01 10:22:23.823 UTC`
+- Last run: `2026-08-01 13:16:11.153 UTC`
 
 ## Claude Implementation Report
 
@@ -239,6 +240,77 @@ Phase-plan, Codex-review, and review-log references. It has not yet been
 published as the trusted modeling milestone. Clean its Markdown using the
 same public-writing standard during Task 3, before its next Kaggle
 publication, rather than expanding the current EDA-only fix.
+
+## Claude Fix Report (Round 2)
+
+**Status: fix round 2 complete, ready for Codex re-review.**
+**Commit: `ecdc357` — `fix(eda): remove internal workflow references from public notebook prose`** (does not amend `2fea5f5`, `3ab0961`, or `e5f5f3a`).
+
+### What changed
+
+Swept the entire notebook (not just the 7 cells Codex named explicitly —
+point 4 asked for a full markdown review, and a regex sweep for
+`Codex|Claude|docs/collaboration|docs/archive|Phase [123]|checklist|review
+log|kernel-metadata|active_task|kaggle-s6e6|kaggle-s6e7|prior/previous
+revision|worktree` found 11 more cells with the same problem). Rewrote all
+20 affected markdown cells — methodology and cautions preserved in
+substance, internal-workflow narration removed. Zero code cells touched
+(confirmed by cell-level source diff against the prior commit). Re-swept
+the final notebook with the same pattern: 0 hits.
+
+Also rewrote `docs/7_kaggle_run_manifest.md` per point 5's exact wording
+and removed its Codex/active-task/review-log references while keeping the
+technical version history and evidence.
+
+### Commands run
+
+```
+cd notebooks && python3 -m jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb   # exit 0
+cd .. && python3 -c "import nbformat; nbformat.validate(...)"   # exit 0
+# 59 cells, 0 error outputs; 22 code cells, execution counts contiguous 1-22
+python3 -c "...kernel-metadata assertions..."   # exit 0, unchanged
+scripts/push_kaggle_kernel.sh eda   # "Kernel version 5 successfully pushed."
+kaggle kernels status ...   # polled every 15s: RUNNING x10, then COMPLETE (~2m37s wall)
+kaggle kernels output ... -p <tmp>   # log only, same known CLI limitation
+kaggle kernels list -m --search smartphone-addiction-eda   # lastRunTime 2026-08-01 13:16:11.153000
+diff <local stdout stream> <Kaggle v5 log stdout stream>
+```
+
+### Public version
+
+https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda — **version 5**, status `complete`, runtime ~150s (9.1s–158.8s per log timestamps).
+
+### Local-vs-Kaggle comparison
+
+Identical pattern to round 1's v4 comparison — confirms the prose-only
+rewrite changed no computed result:
+
+```
+53c53
+< A_raw_features_only              OOF AUC = 0.5650
+---
+> A_raw_features_only              OOF AUC = 0.5651
+55c55
+< C_raw_plus_indicators            OOF AUC = 0.5650
+---
+> C_raw_plus_indicators            OOF AUC = 0.5651
+99c99,101c101   (same values inside the verification-summary JSON)
+109c109
+< {numpy 2.4.6, pandas 2.3.3, scikit-learn 1.9.0, scipy 1.17.1, matplotlib 3.11.1, seaborn 0.13.2}
+---
+> {numpy 2.0.2, pandas 2.3.3, scikit-learn 1.6.1, scipy 1.16.3, matplotlib 3.10.0, seaborn 0.13.2}
+```
+
+Same two already-documented, already-explained differences as v4 (the
+0.0001 `HistGradientBoostingClassifier` cross-run non-determinism on
+experiments A/C, and expected local-vs-Kaggle package version drift).
+Everything else byte-identical. No error/traceback/exception in the v5 log.
+
+### Concerns unchanged
+
+`kaggle kernels output` still does not return `__notebook__.ipynb`/
+`__results__.html` for this kernel — figures remain unverified against
+Kaggle by this method, same as reported after round 1.
 
 ## User Promotion Decision
 
