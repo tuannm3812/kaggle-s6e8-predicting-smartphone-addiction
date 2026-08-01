@@ -163,11 +163,28 @@ files.
 
 ## Codex Review
 
-Pending.
+**Status: accepted; no blocking findings.**
 
-## Codex Review
+Codex independently verified `fac512b`:
 
-Pending.
+- `python3 -m pytest tests/test_verify_submission.py -v` passes all 7 tests;
+- the commit contains only the validator and its synthetic-data tests;
+- exact schema, row count, ID values/order, finite probabilities, and the
+  inclusive `[0, 1]` range are enforced;
+- additional probes confirm `0` and `1` are accepted, infinity and reversed
+  column order are rejected, and the CLI returns `0` for valid input and `1`
+  for invalid input;
+- `.gitignore` already covers the relevant data and generated-artifact paths;
+  and
+- the working tree contains no committed data, credentials, submissions, or
+  prediction artifacts from this task.
+
+Non-blocking hardening notes: a hypothetical fully empty authoritative test
+and submission pair reaches NumPy's generic empty reduction error, and
+duplicate IDs are accepted only if the authoritative test itself contains
+the same duplicates. Neither case violates the current competition contract.
+
+Task 2 is ready for the user's promotion decision.
 
 ## User Promotion Decision
 
