@@ -28,12 +28,12 @@ evidence-based updates. Only one agent modifies the repository at a time.
 - Claude implementation commit: `00e00d9` — `docs(eda): record trusted public Kaggle run`
 - Claude fix commits: `3ab0961` (verification gap), `ecdc357` (public-writing cleanup), `e6334c0` (manifest wording)
 - Task 1 accepted by Codex at `e6334c0` / Kaggle v5 (see "Codex Final Verification")
-- Post-acceptance commit: `4ee5164` (readability revision, user-requested, not yet reviewed)
-- Status: post-acceptance revision complete; awaiting user promotion decision (and Codex review of `4ee5164` if desired)
+- Post-acceptance commits: `4ee5164` (readability revision — flagged an evidence regression on review), `3fa4bf4` (restored reproducibility snapshot, regression resolved)
+- Status: evidence regression resolved at `3fa4bf4` / Kaggle v7; awaiting final Codex verification and user promotion decision
 - Public notebook: https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda
-- Latest Kaggle version: 6
+- Latest Kaggle version: 7
 - Last verified remote status: `complete`
-- Last run: `2026-08-01 13:44:06.067 UTC`
+- Last run: `2026-08-01 14:01:19.273 UTC`
 
 ## Claude Implementation Report
 
@@ -526,6 +526,63 @@ approved keeping it after Codex explained its audit value. Claude should:
 
 The appendix is intentionally concise audit evidence, not a repetition of
 the notebook's analytical narrative.
+
+## Claude Fix Report (Reproducibility Snapshot Restoration)
+
+**Status: complete, ready for final Codex verification.**
+**Commit: `3fa4bf4` — `fix(eda): restore reproducibility snapshot, closing v6 evidence regression`** (does not amend any prior commit).
+
+Implemented exactly the user's decision: kept the version 6 readability
+improvements, restored the printed snapshot as a labeled appendix.
+
+### What changed
+
+1. Added `## Reproducibility Snapshot` at the end of the notebook, with
+   the exact reader-facing sentence specified: "This machine-readable
+   snapshot records the principal numeric findings for reproducibility
+   checks across execution environments."
+2. Restored the deterministic `print(json.dumps(...))` cell — same content
+   as version 4's (numeric-signal ranking, mutual information, numeric and
+   categorical drift, adversarial-validation AUCs, duplicate counts),
+   reusing already-computed values, no recomputation, no analytical logic
+   changed.
+3. Corrected `docs/7_kaggle_run_manifest.md`: version 6's row now states
+   plainly that its "Match exactly" claims for the DataFrame findings were
+   carried forward from version 5 rather than independently re-verified
+   for version 6 — version 5's own comparison remains valid on its own
+   terms, but version 6 itself was never separately checked for those
+   specific items. Added the version 7 row and refreshed all
+   version/count references (7, not 6; 22 code cells, not 21).
+
+Cell-level diff confirms scope: 0 code cells removed, 1 added (the
+restored snapshot cell), 0 existing code cells' content changed.
+
+### Commands run
+
+```
+cd notebooks && python3 -m jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb   # exit 0
+cd .. && python3 -c "import nbformat; nbformat.validate(...)"   # exit 0
+# 59 cells, 0 error outputs; 22 code cells, execution counts contiguous 1-22
+scripts/push_kaggle_kernel.sh eda   # "Kernel version 7 successfully pushed."
+kaggle kernels status ...   # polled every 15s: RUNNING x11, then COMPLETE (~2m55s wall)
+kaggle kernels output ... -p <tmp>   # log only, same known CLI limitation
+diff <local stdout stream> <Kaggle v7 log stdout stream>
+```
+
+### Public version
+
+https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda — **version 7**, status `complete`, runtime ~166s (11.0s–176.6s per log timestamps).
+
+### Local-vs-Kaggle comparison — the gap is closed
+
+The restored snapshot's numeric-signal ranking, mutual information,
+numeric drift, and categorical drift values are byte-identical between
+local and Kaggle v7 (zero diff lines for those categories). Only the two
+already-documented differences remain: adversarial-validation AUC for
+experiments A/C (local `0.5650` vs. Kaggle `0.5651`, the known
+`HistGradientBoostingClassifier` cross-run non-determinism) and expected
+package-version drift (local dev environment vs. Kaggle's image, both
+tables below). No error/traceback/exception in the v7 log.
 
 ## User Promotion Decision
 
