@@ -456,6 +456,47 @@ Everything else byte-identical. No error/traceback/exception in the v6 log.
 comparison evidence, and updated code-cell/execution-count references
 (21 cells, not 22).
 
+## Codex Review — Post-Acceptance Readability Revision
+
+**Status: changes requested — evidence regression in version 6.**
+
+The readability changes are successful: the environment list is clearer,
+the revised bullets scan well, the notebook validates, and no analytical
+modeling logic was intentionally changed. However, removing the printed
+verification snapshot reopens the evidence gap that version 4 closed.
+
+In version 6, the numeric-signal ranking, mutual-information table, numeric
+drift table, and categorical drift table are again bare `execute_result`
+DataFrames with no stdout representation. The Kaggle CLI limitation recorded
+in this log means those version 6 outputs cannot be retrieved for comparison.
+The manifest nevertheless lists them under “Match exactly” for the version 6
+local-versus-Kaggle stdout diff. That claim is unsupported for version 6.
+
+The version 5 comparison plus byte-identical analytical source cells provides
+strong continuity evidence, but it is not the same as independently comparing
+the rendered version 6 values. The version-history claim that the snapshot had
+“no value for a reader” should also be narrowed: it duplicated visible tables,
+but provided material reproducibility/audit value.
+
+Two honest resolution paths are available:
+
+1. **Recommended — preserve readability and exact-version evidence.** Restore
+   a compact final appendix titled “Reproducibility Snapshot” containing the
+   deterministic printed summary, explain its audit purpose in one sentence,
+   republish, and compare the new public version. Keep the environment section
+   and all bullet-list readability improvements.
+2. **Readability-first tradeoff.** Keep version 6 unchanged, but revise the
+   manifest to say only the retrievable stdout subset was compared for version
+   6. State that the numeric-signal, mutual-information, and drift findings
+   were verified on version 5 and that their producing source cells are
+   unchanged in version 6. Remove those items from the version 6 “Match
+   exactly” list. This is transparent but provides weaker exact-version
+   evidence than the previously accepted milestone.
+
+No next task should start until the user chooses this tradeoff and the
+manifest is made accurate. Do not describe the current version 6 evidence as
+equivalent to the accepted version 5 evidence.
+
 ## User Promotion Decision
 
 Pending.
