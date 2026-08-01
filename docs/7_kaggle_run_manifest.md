@@ -5,14 +5,15 @@ provisional values.
 
 | Notebook | Public URL | Kaggle Version | Status | Runtime | Local Comparison | UTC Execution Date |
 | --- | --- | --- | --- | --- | --- | --- |
-| `01_eda.ipynb` | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda | 6 | `complete` | ~160s (8.7s–168.3s per kernel log timestamps) | All retrievable printed outputs were compared. Computed findings match except for the documented 0.0001 A/C differences; runtime package versions differ as documented below. | 2026-08-01 13:44:06.067 UTC (`lastRunTime`, `kaggle kernels list -m`) |
+| `01_eda.ipynb` | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda | 7 | `complete` | ~166s (11.0s–176.6s per kernel log timestamps) | All retrievable printed outputs were compared. Computed findings match except for the documented 0.0001 A/C differences; runtime package versions differ as documented below. | 2026-08-01 14:01:19.273 UTC (`lastRunTime`, `kaggle kernels list -m`) |
 
 ## Version History
 
-Six versions were pushed while resolving a real path-detection bug,
+Seven versions were pushed while resolving a real path-detection bug,
 closing a verification gap, rewriting the notebook's prose for a public
-audience, and improving structure/readability. Each is recorded below,
-not silently overwritten:
+audience, improving structure/readability, and correcting an evidence
+regression that readability pass introduced. Each is recorded below, not
+silently overwritten:
 
 | Version | Status | Outcome |
 | --- | --- | --- |
@@ -21,17 +22,18 @@ not silently overwritten:
 | 3 | `complete` | Added `print(runtime_versions)` so the package-version evidence lands in the log. Several load-bearing numeric findings (feature-signal ranking, mutual information, drift statistics) were still only bare-expression DataFrames, unverifiable against Kaggle the same way. |
 | 4 | `complete` | Added a single `print()`ed JSON verification summary (former Section 11 of the notebook) covering numeric signal ranking, mutual information, numeric and categorical drift statistics, adversarial-validation AUCs, and duplicate counts — closing the verification gap for everything except plots. Some notebook markdown was not yet self-contained for a public reader. |
 | 5 | `complete` | Rewrote every markdown cell to be self-contained and reader-facing — methodology and cautions preserved, internal references removed. No computed cell changed; re-verified identical results (except the already-documented 0.0001 A/C difference) and identical contiguous execution counts (1–22) after the rewrite. |
-| 6 | `complete` | Structural cleanup: removed the JSON verification-summary section (it only existed to work around the `kaggle kernels output` limitation noted above, and duplicated numbers already shown in the tables earlier in the notebook — no value for a reader). Moved the package-version cell from the end to a new "Environment" section right after setup, reformatted as a readable bullet list instead of a raw dict print. Converted four dense insight cells to bulleted lists for scanability. No computed cell changed. This is the version recorded above and committed. |
+| 6 | `complete` | Removed the JSON verification-summary section for readability — it duplicated numbers already shown in the tables earlier in the notebook, but (this was under-weighted at the time) it was also the only channel making the numeric-signal, mutual-information, and drift DataFrame findings independently verifiable against Kaggle, since `kaggle kernels output` cannot retrieve bare-`execute_result` values. Removing it reopened that verification gap while the manifest's comparison claims were not narrowed to match — an evidence regression, caught on review. Moved the package-version cell to a new "Environment" section at the top, reformatted as a bullet list; kept in version 7. |
+| 7 | `complete` | Restored a compact, clearly-labeled "Reproducibility Snapshot" appendix (deterministic `print()`ed JSON, same content as version 4's, reusing already-computed values with no recomputation) at the end of the notebook — closing the verification gap again while keeping every version 6 readability improvement (environment section at the top, bulleted insight cells). No computed cell changed. This is the version recorded above and committed. |
 
 ## Local Vs. Kaggle Output Comparison
 
 **All retrievable printed outputs were compared. Computed findings match
 except for the documented 0.0001 A/C differences; runtime package versions
 differ as documented below.** Every `print()`-based output — including the
-environment section moved to the top of the notebook in version 6 — was
-diffed line-by-line between the local run (this checkout, `python3 -m
-jupyter nbconvert --to notebook --execute --inplace`, default kernel) and
-the Kaggle v6 log:
+Environment section at the top and the Reproducibility Snapshot at the
+end — was diffed line-by-line between the local run (this checkout,
+`python3 -m jupyter nbconvert --to notebook --execute --inplace`, default
+kernel) and the Kaggle v7 log:
 
 **Match exactly:**
 - Target counts (`train: (691369, 14), test: (296302, 13)`), positive rate `0.7094`.
@@ -56,9 +58,20 @@ as a match. Runtime package versions also differ, as expected — see the
 table below.
 
 No error output on Kaggle (confirmed: no `error`/`traceback`/`exception`
-string anywhere in the v6 kernel log). Execution counts remain contiguous
-1–21 across all 21 code cells, confirming a genuine top-to-bottom run with
+string anywhere in the v7 kernel log). Execution counts remain contiguous
+1–22 across all 22 code cells, confirming a genuine top-to-bottom run with
 no stale/out-of-order cell state.
+
+**On version 6, corrected:** the version 6 manifest listed numeric-signal
+ranking, mutual information, and drift statistics under "Match exactly"
+without independently verifying them for that specific version — the
+verification channel for those DataFrame findings (the printed summary)
+had just been removed in that same version, and the claim was carried
+forward from version 5 rather than re-checked. Version 5's own comparison
+for those items remains valid (they were genuinely diffed then), and the
+producing source cells were byte-identical from version 5 through version
+7, but version 6 itself was never independently re-verified for those
+specific findings. Version 7 closes that gap directly.
 
 **Not independently verified:** the KDE/heatmap/barplot figures. These
 remain bare-expression outputs with no text representation to diff, and
@@ -70,7 +83,7 @@ than a blocking gap.
 
 ## Trusted Kaggle Package Versions
 
-Printed by the notebook's own Environment section during the v6 Kaggle run
+Printed by the notebook's own Environment section during the v7 Kaggle run
 (this table is the only place these are recorded as trusted — do not copy
 stale numbers elsewhere):
 
