@@ -11,6 +11,9 @@ env/
 .idea/
 .DS_Store
 
+# Isolated implementation worktrees
+.worktrees/
+
 # Kaggle data (includes partial-download temp files, e.g. .*.zip.XXXXXX
 # left behind by an interrupted `kaggle competitions download`)
 data/*
