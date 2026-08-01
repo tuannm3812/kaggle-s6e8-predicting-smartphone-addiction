@@ -26,12 +26,14 @@ evidence-based updates. Only one agent modifies the repository at a time.
 - Task: Task 1 — Publish And Verify The EDA Notebook
 - Starting commit: `dddb253`
 - Claude implementation commit: `00e00d9` — `docs(eda): record trusted public Kaggle run`
-- Claude fix commits: `3ab0961` (verification gap), `ecdc357` (public-writing cleanup)
-- Status: fix round 2 complete; awaiting Codex re-review
+- Claude fix commits: `3ab0961` (verification gap), `ecdc357` (public-writing cleanup), `e6334c0` (manifest wording)
+- Task 1 accepted by Codex at `e6334c0` / Kaggle v5 (see "Codex Final Verification")
+- Post-acceptance commit: `4ee5164` (readability revision, user-requested, not yet reviewed)
+- Status: post-acceptance revision complete; awaiting user promotion decision (and Codex review of `4ee5164` if desired)
 - Public notebook: https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda
-- Reviewed Kaggle version: 5
+- Latest Kaggle version: 6
 - Last verified remote status: `complete`
-- Last run: `2026-08-01 13:16:11.153 UTC`
+- Last run: `2026-08-01 13:44:06.067 UTC`
 
 ## Claude Implementation Report
 
@@ -395,6 +397,64 @@ Codex independently verified `e6334c0`:
 - the live public Kaggle kernel reports `complete`.
 
 No unresolved Codex findings remain for Task 1.
+
+## Post-Acceptance Readability Revision (User-Requested)
+
+Task 1 was accepted (see "Codex Final Verification" above) before this
+change. The user then asked, in conversation rather than via this log,
+whether the notebook's Section 11 ("Verification Summary") and Section 12
+("Runtime Environment") were actually needed, and suggested bullet lists
+where they'd improve readability. Discussed and agreed before
+implementing, then executed with the same rigor as the earlier fix rounds.
+
+**Commit: `4ee5164` — `refactor(eda): move environment info to the top, drop redundant verification section`** (does not amend any prior commit).
+
+### What changed
+
+1. Removed the JSON "Verification Summary" section entirely — it only
+   existed to work around the `kaggle kernels output` CLI limitation noted
+   throughout this log (bare-expression DataFrame outputs weren't
+   retrievable from the log stream). Necessary for verifying this task's
+   evidence during review, but pure duplication for a reader: every number
+   in it was already shown in table form earlier in the notebook.
+2. Moved the package-version report from the end of the notebook to a new
+   "Environment" section immediately after setup, reformatted from a raw
+   printed dict to a readable bullet list (`- numpy: 2.0.2`, etc.).
+3. Converted four dense, multi-point insight cells to bulleted lists for
+   scanability. Left single-point cells as prose.
+
+No code cell's logic changed: 2 code cells removed (the verification-
+summary cell and the old end-of-notebook versions cell), 1 added (the
+relocated environment cell), zero existing code cells' content touched —
+confirmed by cell-level source diff against the prior commit.
+
+### Commands run
+
+```
+cd notebooks && python3 -m jupyter nbconvert --to notebook --execute --inplace 01_eda.ipynb   # exit 0
+cd .. && python3 -c "import nbformat; nbformat.validate(...)"   # exit 0
+# 57 cells, 0 error outputs; 21 code cells, execution counts contiguous 1-21
+scripts/push_kaggle_kernel.sh eda   # "Kernel version 6 successfully pushed."
+kaggle kernels status ...   # polled every 15s: RUNNING x11, then COMPLETE (~2m52s wall)
+kaggle kernels output ... -p <tmp>   # log only, same known CLI limitation
+diff <local stdout stream> <Kaggle v6 log stdout stream>
+```
+
+### Public version
+
+https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda — **version 6**, status `complete`, runtime ~160s (8.7s–168.3s per log timestamps).
+
+### Local-vs-Kaggle comparison
+
+Same pattern as every prior round — confirms the restructuring changed no
+computed result: package versions differ as expected (local vs. Kaggle
+image), and the same already-documented `0.0001` `HistGradientBoostingClassifier`
+non-determinism on experiments A/C (local `0.5650` vs. Kaggle `0.5651`).
+Everything else byte-identical. No error/traceback/exception in the v6 log.
+
+`docs/7_kaggle_run_manifest.md` updated with the v6 version-history row,
+comparison evidence, and updated code-cell/execution-count references
+(21 cells, not 22).
 
 ## User Promotion Decision
 
