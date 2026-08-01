@@ -176,7 +176,69 @@ remain unverified against Kaggle by this method. Per this review's scope
 
 ## Codex Re-review
 
-Pending.
+**Status: changes requested — fix round 2.**
+
+Claude's technical fix in `3ab0961` is acceptable: the notebook has 59
+cells, 22 code cells with contiguous execution counts 1–22, zero error
+outputs, and the verification-summary cell covers every requested measure
+using variables computed earlier in the notebook. The public Kaggle kernel
+was independently checked and remains `complete`.
+
+The task is not ready for promotion because the public prose still exposes
+the internal agent and review workflow.
+
+### Required public-writing changes
+
+1. Rewrite `notebooks/01_eda.ipynb` cell `4034bc57` so the introduction
+   states the notebook's analytical scope directly. Remove “Phase 1
+   checklist,” “Codex review,” implementation-plan, and review-log
+   references. Suggested direction:
+
+   > This notebook examines schema and class balance, evaluates univariate
+   > and nonlinear feature signal, studies missingness and categorical
+   > interactions, checks duplicate rows, and compares train/test
+   > distributions with both univariate tests and adversarial validation.
+
+2. Rewrite cells `0b3a5026`, `8d8e1031`, `438417be`, `8898bbfb`,
+   `fe074daa`, `2ef3cef1`, and `04f60953` as self-contained methodology or
+   interpretation. Preserve their useful cautions, but remove agent names,
+   review sections, internal logs, “previous/prior revision” narration, and
+   private workflow justification.
+3. Rewrite verification-summary cell `ab14d735` for public readers. Keep the
+   reproducibility purpose but remove `docs/collaboration/active_task.md`,
+   kernel-metadata, review, and CLI/tooling narration. Suggested direction:
+
+   > This compact machine-readable summary captures the principal numeric
+   > findings from the tables above and supports reproducibility across
+   > execution environments. It reuses previously computed values without
+   > recomputation.
+
+4. Review every Markdown cell in `01_eda.ipynb` and remove remaining
+   references to `Codex`, `Claude`, `docs/collaboration`,
+   `docs/archive/4_codex_claude_review_log.md`, checklists, or internal
+   review history. Links to substantive project documentation may remain
+   only when useful to a public reader, but the Kaggle notebook must remain
+   understandable without access to the repository.
+5. In `docs/7_kaggle_run_manifest.md`, replace “All retrievable printed
+   outputs match, with one documented difference” with the logically precise
+   wording: “All retrievable printed outputs were compared; all match except
+   the documented 0.0001 A/C differences.” Remove Codex/active-task/review-log
+   references from the public-facing manifest while retaining the technical
+   version history and evidence.
+6. Re-execute and validate the EDA notebook locally, publish the professional
+   revision as a new public Kaggle version, wait for `complete`, and record
+   the new version and verification evidence. Commit this as a separate fix
+   commit and append the report here for re-review.
+
+Do not change computed methodology or results merely to rewrite the prose.
+
+### Baseline notebook follow-up
+
+`notebooks/02_baseline_modeling.ipynb` contains the same kind of internal
+Phase-plan, Codex-review, and review-log references. It has not yet been
+published as the trusted modeling milestone. Clean its Markdown using the
+same public-writing standard during Task 3, before its next Kaggle
+publication, rather than expanding the current EDA-only fix.
 
 ## User Promotion Decision
 
