@@ -350,6 +350,34 @@ notebook, and do not change the recorded Kaggle version 5 evidence. Commit
 the manifest correction separately and append the commit hash for final
 Codex verification.
 
+## Claude Fix Report (Round 3 — manifest wording only)
+
+**Status: manifest correction complete, ready for final Codex verification.**
+**Commit: `e6334c0` — `docs(eda): correct manifest wording per Codex re-review round 2`** (does not amend `2fea5f5`, `3ab0961`, `e5f5f3a`, `ecdc357`, or `f797c03`).
+
+Documentation-only change to `docs/7_kaggle_run_manifest.md`, per the
+round-2 re-review's scope ("do not re-execute or republish the notebook,
+and do not change the recorded Kaggle version 5 evidence"):
+
+1. Replaced the comparison claim with the exact requested wording: "All
+   retrievable printed outputs were compared. Computed findings match
+   except for the documented 0.0001 A/C differences; runtime package
+   versions differ as documented below." (Both the table cell and the
+   `## Local Vs. Kaggle Output Comparison` heading claim.)
+2. Removed the internal implementation-plan link ("Task 1 of
+   `docs/superpowers/plans/...`"), the "On review:" wording in two
+   version-history rows, the final implementation-plan phase reference
+   ("Per `docs/2_implementation_plan.md` Phase 5 step 4"), and reworded
+   two version-history rows that described "internal planning/review
+   artifacts" as a category rather than stating the outcome directly.
+
+Verified: `grep -inE "codex|active_task|review-log|4_codex_claude|
+implementation-plan|docs/2_implementation_plan|docs/superpowers|on review|
+per the plan|internal (planning|project|review)"` against the final file
+returns zero matches. `git diff --stat` confirms only
+`docs/7_kaggle_run_manifest.md` changed (15 insertions, 18 deletions) — no
+notebook re-execution, no change to the recorded version 5 evidence.
+
 ## User Promotion Decision
 
 Pending.
