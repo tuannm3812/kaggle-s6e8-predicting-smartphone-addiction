@@ -497,6 +497,36 @@ No next task should start until the user chooses this tradeoff and the
 manifest is made accurate. Do not describe the current version 6 evidence as
 equivalent to the accepted version 5 evidence.
 
+## User Decision — Reproducibility Snapshot
+
+**Decision: restore the snapshot while retaining the version 6 readability
+improvements.**
+
+The user confirmed that removing the snapshot was their readability idea and
+approved keeping it after Codex explained its audit value. Claude should:
+
+1. Keep the environment section near the top and retain the improved bullet
+   formatting from version 6.
+2. Add a compact final appendix titled `## Reproducibility Snapshot`.
+3. Introduce it with one reader-facing sentence, for example:
+
+   > This machine-readable snapshot records the principal numeric findings
+   > for reproducibility checks across execution environments.
+
+4. Restore the deterministic printed summary covering numeric-signal
+   ranking, mutual information, numeric drift, categorical drift,
+   adversarial-validation AUCs, and duplicate counts. Reuse values already
+   computed earlier; do not recompute or change analytical logic.
+5. Execute and validate locally, publish the replacement public Kaggle
+   version, wait for `complete`, compare the retrievable output, and update
+   the manifest using only actual evidence from that version.
+6. Preserve the documented package-version differences and any observed A/C
+   numerical differences exactly. Commit separately and append the report
+   for final Codex verification.
+
+The appendix is intentionally concise audit evidence, not a repetition of
+the notebook's analytical narrative.
+
 ## User Promotion Decision
 
 Pending.
