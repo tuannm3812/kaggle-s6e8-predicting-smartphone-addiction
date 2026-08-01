@@ -123,4 +123,4 @@ declared champion.
 6. CatBoost's per-fold fit time (70s) is roughly 6× LightGBM's (11s) at
    comparable settings — a real cost to weigh against any accuracy gain
    CatBoost shows once properly tuned, given the ~10 hrs/week budget in
-   `docs/4_codex_claude_review_log.md` §1.
+   `docs/archive/4_codex_claude_review_log.md` §1.

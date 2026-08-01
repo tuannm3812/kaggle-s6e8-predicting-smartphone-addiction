@@ -3,7 +3,7 @@
 From `notebooks/01_eda.ipynb`, revision 2, executed end-to-end 2026-08-01.
 Findings first, evidence after, per `docs/0_coding_standards.md`. This
 revision replaces the original version after the Codex review in
-`docs/4_codex_claude_review_log.md` §13 found methodological gaps in
+`docs/archive/4_codex_claude_review_log.md` §13 found methodological gaps in
 several of the original conclusions — see §11 below for what changed and
 why.
 
@@ -123,10 +123,10 @@ and univariate AUC** (both near 0.5 AUC, i.e. almost uninformative on their
 own). Mutual information captures nonlinear/non-monotonic dependence that
 the other two diagnostics cannot — this is a genuine, not spurious,
 disagreement worth testing directly rather than resolving by picking one
-"authoritative" ranking (per `docs/4_codex_claude_review_log.md` §13.2.4).
+"authoritative" ranking (per `docs/archive/4_codex_claude_review_log.md` §13.2.4).
 
 Mutual information is computed on a deterministic stratified 150,000-row
-sample. Per `docs/4_codex_claude_review_log.md` §15.3: `age`,
+sample. Per `docs/archive/4_codex_claude_review_log.md` §15.3: `age`,
 `notifications_per_day`, and `app_opens_per_day` are integer-valued (stored
 as `float64` only due to missing values — confirmed `(values ==
 values.round()).all()` on non-missing entries) with far fewer unique values
@@ -202,7 +202,7 @@ sample size is not the same as practically large.
 
 ## 9. Adversarial Validation
 
-**Revised per `docs/4_codex_claude_review_log.md` §15.2**, which caught a
+**Revised per `docs/archive/4_codex_claude_review_log.md` §15.2**, which caught a
 real methodological flaw in the original version of this section: a
 `HistGradientBoostingClassifier` handles missing values natively, so a raw
 column with NaN already encodes *both* the observed value *and* the
@@ -314,7 +314,7 @@ disagree materially.
 
 ## 11. What Changed From The Original Revision, And Why
 
-Following the Codex review (`docs/4_codex_claude_review_log.md` §13),
+Following the Codex review (`docs/archive/4_codex_claude_review_log.md` §13),
 retracted or narrowed:
 
 - **"Trust the correlation ranking" (old §3) → replaced** with three
@@ -338,7 +338,7 @@ retracted or narrowed:
 
 ## 12. Revision 2: What Changed After Codex's Review Of The Completion Report
 
-Following `docs/4_codex_claude_review_log.md` §15, a second, more
+Following `docs/archive/4_codex_claude_review_log.md` §15, a second, more
 substantial round of corrections:
 
 - **§9's causal claim ("the signal comes from raw values, not missingness")

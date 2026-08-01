@@ -1,6 +1,6 @@
 # Source Dataset Provenance
 
-Investigates the candidate source dataset named in `docs/4_codex_claude_review_log.md`
+Investigates the candidate source dataset named in `docs/archive/4_codex_claude_review_log.md`
 §13.3: https://www.kaggle.com/datasets/jayjoshi37/smartphone-usage-and-addiction-prediction
 ("Smartphone Usage & Addiction Prediction", 7,500 rows, CC0-1.0, published
 2026-02-19). Confirmed 2026-08-01 via `kaggle datasets metadata` /
@@ -72,7 +72,7 @@ present in the competition data) is a **perfectly deterministic** function of
 `addicted_label = 1` iff `addiction_level ∈ {Moderate, Severe}`; `= 0` iff
 `addiction_level ∈ {Mild, NaN}` — zero exceptions across all 7,500 rows.
 
-**Narrowed per `docs/4_codex_claude_review_log.md` §15.5** (an earlier
+**Narrowed per `docs/archive/4_codex_claude_review_log.md` §15.5** (an earlier
 version of this section over-claimed): this establishes only that
 `addicted_label` is a **deterministic binary collapse of the recorded
 `addiction_level` field** in the candidate source. It does **not** establish
@@ -106,7 +106,7 @@ or split of this source file.
 
 ## Implications For Modeling (Phase 2/3)
 
-Narrowed per `docs/4_codex_claude_review_log.md` §15.5 — only what the
+Narrowed per `docs/archive/4_codex_claude_review_log.md` §15.5 — only what the
 evidence in §3/§4 actually supports:
 
 - No new usable feature: `addiction_level` isn't in the competition data and
@@ -128,7 +128,7 @@ comparison, target-generation cross-tab, row-hash join against
 `train.csv`/`test.csv`) lives in `scripts/verify_source_provenance.py`, not
 in an unpreserved local session — run it against a fresh
 `kaggle datasets download` if re-verification is needed. Per
-`docs/4_codex_claude_review_log.md` §15.6/15.7.3: the downloaded source CSV
+`docs/archive/4_codex_claude_review_log.md` §15.6/15.7.3: the downloaded source CSV
 itself is **not** committed and should stay outside the repository
 (`/tmp/candidate_src_data/` or similar) — only the comparison logic and its
 findings are preserved.

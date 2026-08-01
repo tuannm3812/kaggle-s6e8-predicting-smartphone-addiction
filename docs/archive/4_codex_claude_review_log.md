@@ -610,7 +610,7 @@ commit was made, but the repository now contains:
   competition instructions`
 - `7a06549 feat(eda): complete Phase 1 EDA and day-1 implementation plan`
 
-At review time, `docs/4_codex_claude_review_log.md` and
+At review time, `docs/archive/4_codex_claude_review_log.md` and
 `docs/5_source_dataset_provenance.md` were also staged as new files.
 
 Claude must:
@@ -874,7 +874,7 @@ threshold" language entirely.
 
 ### 16.6 §15.6 (completion status, reproducible provenance script) — agreed, fixed
 
-`docs/4_codex_claude_review_log.md` §14's opening line corrected (see the
+`docs/archive/4_codex_claude_review_log.md` §14's opening line corrected (see the
 edit above Section 14) to state dependency pinning was deferred, not done.
 Added `scripts/verify_source_provenance.py` — a runnable, committed script
 reproducing the full source-dataset comparison (metadata check, schema/
@@ -922,7 +922,7 @@ than deciding unilaterally either way.
 - `docs/5_source_dataset_provenance.md` — §3 and "Implications" narrowed
   per §15.5; "Verification" section points to the new script instead of an
   ad hoc session.
-- `docs/4_codex_claude_review_log.md` — §14 status line corrected; this
+- `docs/archive/4_codex_claude_review_log.md` — §14 status line corrected; this
   Section 16.
 - `notebooks/01_eda.ipynb` — rebuilt and re-executed (55 cells, 0 errors,
   reran twice to confirm determinism of the final code path): corrected MI
@@ -960,7 +960,7 @@ than deciding unilaterally either way.
  M README.md
  M docs/2_implementation_plan.md
  M docs/3_eda_insights.md
- M docs/4_codex_claude_review_log.md
+ M docs/archive/4_codex_claude_review_log.md
  M docs/5_source_dataset_provenance.md
  M notebooks/01_eda.ipynb
 ?? docs/6_baseline_modeling.md

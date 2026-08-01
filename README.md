@@ -21,7 +21,7 @@ Evaluation metric confirmed as ROC AUC. Current best OOF AUC: **0.9573**
 verdict). See `docs/2_implementation_plan.md` for the full phased plan,
 `docs/1_instructions.md` for competition facts, `docs/3_eda_insights.md` for
 EDA findings, and `docs/5_source_dataset_provenance.md` for the likely
-source-dataset investigation. `docs/4_codex_claude_review_log.md` records
+source-dataset investigation. `docs/archive/4_codex_claude_review_log.md` records
 the Codex/Claude collaborative review that shaped the EDA methodology and
 Phase 3 scope.
 

@@ -3,7 +3,7 @@
 Day-1 phased plan for Playground Series S6E8 (Predicting Smartphone
 Addiction), written 2026-08-01 against a **2026-08-31 23:59 UTC** deadline
 (30 days), revised 2026-08-01 after the Codex review in
-`docs/4_codex_claude_review_log.md`. Takes methodology (native categorical
+`docs/archive/4_codex_claude_review_log.md`. Takes methodology (native categorical
 handling, OOF-first validation, hypothesis-gated submissions, experiment
 ledgers) from `kaggle-s6e6-predicting-stellar-class` and
 `kaggle-s6e7-predicting-student-health-risk`, but **intentionally does not**
@@ -11,7 +11,7 @@ mirror their full model-proliferation scope (3 GBDT families × Optuna ×
 multi-seed × blend × stacking) — that scope was sized before the user's
 actual constraint was known: **a polished learning/portfolio project first,
 still targeting a strong result, at ~10 active hours/week through
-2026-08-31** (`docs/4_codex_claude_review_log.md` §1). Phase 3 below reflects
+2026-08-31** (`docs/archive/4_codex_claude_review_log.md` §1). Phase 3 below reflects
 that constraint directly.
 
 Competition shape: binary target `addicted_label` (70.9%/29.1% imbalance),
@@ -150,7 +150,7 @@ written):
 
 Deliberately staged and gated, not a fixed "run everything" scope — each
 step only proceeds if the previous one's evidence justifies its cost, per
-`docs/4_codex_claude_review_log.md` §13.4:
+`docs/archive/4_codex_claude_review_log.md` §13.4:
 
 1. **Sanity baselines** — already covered in Phase 2 step 2 (constant
    predictor, logistic regression, HGB); referenced here as the floor
@@ -192,7 +192,7 @@ step only proceeds if the previous one's evidence justifies its cost, per
    `docs/10_leaderboard_improvement_insights.md`, accepted/rejected with
    exact numbers.
 
-Time budget: treat `docs/4_codex_claude_review_log.md` §9's ~40-hour,
+Time budget: treat `docs/archive/4_codex_claude_review_log.md` §9's ~40-hour,
 5-workstream estimate as an initial allocation, to be revisited once Phase 2
 produces a measured baseline runtime (fold-fit time on ~690k rows locally
 vs. on Kaggle) — not committed to precisely as written.
@@ -230,7 +230,7 @@ first candidate is ready); the core rules, adapted from S6E7's discipline
 5. Write the closing README update (`## Current Result` table, `## What
    Worked`, `## Final Modeling Decision`) — findings first, exact metrics,
    explicit stop-condition reasoning, and (per the portfolio-project
-   priority in `docs/4_codex_claude_review_log.md` §1) a clear write-up of
+   priority in `docs/archive/4_codex_claude_review_log.md` §1) a clear write-up of
    what was learned, not just the final score.
 
 ## Planned Docs (created as each phase produces results)

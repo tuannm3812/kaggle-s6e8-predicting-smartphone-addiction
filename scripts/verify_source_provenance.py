@@ -8,7 +8,7 @@ domains, target prevalence, missingness, the addiction_level <->
 addicted_label cross-tab, and a row-hash join for literal duplicate rows.
 
 Downloads the source dataset to a temp directory (not committed, not copied
-into data/) via the Kaggle CLI, per docs/4_codex_claude_review_log.md
+into data/) via the Kaggle CLI, per docs/archive/4_codex_claude_review_log.md
 Sections 13.3 / 15.6 / 15.7.3.
 
 Usage: scripts/verify_source_provenance.py
