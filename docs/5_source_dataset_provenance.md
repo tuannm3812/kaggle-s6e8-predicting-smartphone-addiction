@@ -71,26 +71,33 @@ present in the competition data) is a **perfectly deterministic** function of
 
 `addicted_label = 1` iff `addiction_level ∈ {Moderate, Severe}`; `= 0` iff
 `addiction_level ∈ {Mild, NaN}` — zero exceptions across all 7,500 rows.
-This means the binary target is a **collapsed 4-level severity scale**, not
-an independently-labeled binary outcome — the true decision boundary in
-behavior-feature space is likely a genuine, not noisy, threshold. This is
-context for modeling headroom (a strong, well-separated boundary may be
-achievable), not a usable feature on its own, since `addiction_level` itself
-is not in the competition data and cannot be reconstructed with certainty.
+
+**Narrowed per `docs/4_codex_claude_review_log.md` §15.5** (an earlier
+version of this section over-claimed): this establishes only that
+`addicted_label` is a **deterministic binary collapse of the recorded
+`addiction_level` field** in the candidate source. It does **not** establish
+that the decision boundary in *behavior-feature space* (the 12 predictors
+actually available) is clean, threshold-like, or noise-free — `addiction_level`
+and `addicted_label` may simply be two alternate representations of the same
+underlying label, generated together, with no guarantee that the 12 recorded
+predictors alone determine either one reliably. `addiction_level` is not in
+the competition data and is not a usable feature. **Predictive headroom must
+be measured through actual OOF results (`docs/6_baseline_modeling.md`
+onward), not inferred from this label mapping.**
 
 ### 4. No missing values in the source; no exact row overlap with the competition
 
 The source has **zero missing values** in any of the 12 shared feature
 columns — the competition's missingness (present in every one of the 12
 features, 4%–19% each, per `docs/1_instructions.md`) is not inherited from
-the source. It was injected by the competition's generator, on top of a
-source that was itself complete. This is a plausible causal mechanism for
-`docs/3_eda_insights.md`'s finding that missingness carries ~no target
-signal here (§4 of that doc, revised — see the OOF ablation still planned
-per the review log's Q3/13.2.6): injected missingness of this kind is
-commonly close to MCAR by construction, which would produce exactly the
-weak marginal signal observed, though this is a plausible mechanism, not
-proof — the OOF ablation is still the direct test.
+the source; it was injected by the competition's generator on top of a
+source that was itself complete. This says nothing about *why* the
+generator injected missingness the way it did, or whether that missingness
+carries target signal — `docs/3_eda_insights.md` §9's adversarial-validation
+ablation found the value-vs-missingness attribution question genuinely
+unresolved (not settled toward MCAR or toward informative missingness), and
+`docs/6_baseline_modeling.md` §4's direct OOF ablation is the actual answer
+on whether `_is_missing` flags help (they don't, on target AUC).
 
 Checked for literal row leakage: joining on the 12 shared feature columns,
 **0 of the source's 7,500 rows exactly match any row in `train.csv` or
@@ -99,28 +106,29 @@ or split of this source file.
 
 ## Implications For Modeling (Phase 2/3)
 
+Narrowed per `docs/4_codex_claude_review_log.md` §15.5 — only what the
+evidence in §3/§4 actually supports:
+
 - No new usable feature: `addiction_level` isn't in the competition data and
   can't be safely reconstructed, so this doesn't change the feature set.
-- Useful context for calibrating expectations: since the source's label is a
-  clean threshold on an underlying severity scale, a well-tuned model may
-  achieve a high AUC ceiling if the competition generator preserved that
-  structure (plausible, not guaranteed — the generator both widened some
-  feature ranges and injected missingness, either of which could blur the
-  boundary).
-- Supports (does not prove) the "missingness ~MCAR" reading in
-  `docs/3_eda_insights.md` — treat as one more piece of evidence alongside
-  the OOF ablation, not a replacement for it.
+- `addicted_label` is a deterministic collapse of `addiction_level` *in the
+  source*; this is a fact about the source's label construction, not a
+  measurement of how predictable `addicted_label` is from the 12 competition
+  features. Any claim about achievable AUC ceiling must come from actual OOF
+  results, not from this label-mapping fact.
+- Says nothing about missingness informativeness one way or the other — see
+  `docs/3_eda_insights.md` §9 (adversarial validation, inconclusive
+  attribution) and `docs/6_baseline_modeling.md` §4 (direct OOF ablation,
+  the actual answer) instead.
 
-## Verification Commands
+## Verification
 
-```bash
-kaggle datasets metadata -p /tmp/candidate_src_meta jayjoshi37/smartphone-usage-and-addiction-prediction
-kaggle datasets download -d jayjoshi37/smartphone-usage-and-addiction-prediction -p /tmp/candidate_src_data
-```
-
-Followed by a local pandas comparison of shape, dtypes, column names, value
-domains, target prevalence, missingness, the `addiction_level` ↔
-`addicted_label` cross-tab, and a row-hash join against `train.csv`/
-`test.csv` on the 12 shared feature columns. Not committed: the downloaded
-source CSV (`/tmp/candidate_src_data/`, outside the repo, not copied into
-`data/`).
+Reproducible comparison logic (metadata check, schema/value-domain
+comparison, target-generation cross-tab, row-hash join against
+`train.csv`/`test.csv`) lives in `scripts/verify_source_provenance.py`, not
+in an unpreserved local session — run it against a fresh
+`kaggle datasets download` if re-verification is needed. Per
+`docs/4_codex_claude_review_log.md` §15.6/15.7.3: the downloaded source CSV
+itself is **not** committed and should stay outside the repository
+(`/tmp/candidate_src_data/` or similar) — only the comparison logic and its
+findings are preserved.

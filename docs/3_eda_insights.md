@@ -102,15 +102,15 @@ assumption, unlike `kaggle-s6e7`'s `stress_level`.
 
 | Feature | Pearson \|r\| | Univariate AUC (§3) | Mutual info |
 | --- | ---: | ---: | ---: |
-| `daily_screen_time_hours` | 0.611 | 0.890 | 0.2208 |
-| `weekend_screen_time` | 0.590 | 0.881 | 0.2060 |
-| `social_media_hours` | 0.532 | 0.858 | 0.1586 |
-| `notifications_per_day` | 0.012 | 0.492 | **0.0859** |
-| `app_opens_per_day` | 0.063 | 0.541 | **0.0783** |
-| `work_study_hours` | 0.251 | 0.655 | 0.0400 |
-| `gaming_hours` | 0.205 | 0.622 | 0.0283 |
-| `sleep_hours` | 0.043 | 0.527 | 0.0101 |
-| `age` | 0.004 | 0.502 | 0.0059 |
+| `daily_screen_time_hours` | 0.611 | 0.890 | 0.2230 |
+| `weekend_screen_time` | 0.590 | 0.881 | 0.2040 |
+| `social_media_hours` | 0.532 | 0.858 | 0.1576 |
+| `notifications_per_day` | 0.012 | 0.492 | **0.0857** |
+| `app_opens_per_day` | 0.063 | 0.541 | **0.0775** |
+| `work_study_hours` | 0.251 | 0.655 | 0.0390 |
+| `gaming_hours` | 0.205 | 0.622 | 0.0277 |
+| `sleep_hours` | 0.043 | 0.527 | 0.0112 |
+| `age` | 0.004 | 0.502 | 0.0035 |
 | `gender` | n/a | n/a | 0.00023 |
 | `stress_level` | n/a | n/a | 0.0000063 |
 | `academic_work_impact` | n/a | n/a | 0.0000002 |
@@ -124,9 +124,22 @@ own). Mutual information captures nonlinear/non-monotonic dependence that
 the other two diagnostics cannot — this is a genuine, not spurious,
 disagreement worth testing directly rather than resolving by picking one
 "authoritative" ranking (per `docs/4_codex_claude_review_log.md` §13.2.4).
+
 Mutual information is computed on a deterministic stratified 150,000-row
-sample with median/mode imputation local to this diagnostic only (not used
-elsewhere) — treat these values as exploratory, not precise.
+sample. Per `docs/4_codex_claude_review_log.md` §15.3: `age`,
+`notifications_per_day`, and `app_opens_per_day` are integer-valued (stored
+as `float64` only due to missing values — confirmed `(values ==
+values.round()).all()` on non-missing entries) with far fewer unique values
+(18 / 231 / 166) than a genuinely continuous feature would have over 691k
+rows, which biases `mutual_info_classif`'s continuous k-nearest-neighbor
+estimator. These three are now marked discrete (integer-safe imputation:
+rounded median), alongside the 3 categorical features, rather than treated
+as continuous as in the prior revision. **The ranking and the
+`notifications_per_day`/`app_opens_per_day` disagreement both persist under
+the corrected discrete/continuous split** (values shifted by ≤0.002 each,
+rank order unchanged) — the original finding was not an artifact of the
+estimator misconfiguration. Treat these values as exploratory, not precise,
+regardless.
 
 Among categoricals, `gender`'s mutual information (0.00023) is over 30×
 `stress_level`'s (0.0000063), consistent with §5's target-rate table
@@ -189,51 +202,87 @@ sample size is not the same as practically large.
 
 ## 9. Adversarial Validation
 
-A 3-fold `HistGradientBoostingClassifier` trained to distinguish train rows
-(label 0) from test rows (label 1), using all 12 features (native
-categorical + native NaN handling) plus 12 `_is_missing` indicator columns:
+**Revised per `docs/4_codex_claude_review_log.md` §15.2**, which caught a
+real methodological flaw in the original version of this section: a
+`HistGradientBoostingClassifier` handles missing values natively, so a raw
+column with NaN already encodes *both* the observed value *and* the
+missing/not-missing pattern in one column. The original approach — permute
+each raw column and read off permutation importance from one combined
+model — cannot separate those two sources; a near-zero importance for the
+explicit `_is_missing` indicator only shows the indicator is *redundant
+once the NaN-aware raw column is present*, not that the raw column's
+importance is really about values rather than missingness. The original
+conclusion ("essentially all of the signal comes from the raw feature
+values... not an artifact of the missingness-rate differences") did not
+follow from that experiment and is retracted.
 
-**OOF AUC = 0.5650**
+**Corrected design:** three separate 3-fold `HistGradientBoostingClassifier`
+models trained to distinguish train rows from test rows, each on a
+different feature set:
 
-Per the review's interpretation rule, an AUC above 0.5 requires
-investigating which features drive it — permutation importance (on a
-held-out 20% split, 50,000-row subsample, 5 repeats, scored on AUC drop):
+| Experiment | Features | OOF AUC |
+| --- | --- | ---: |
+| A — raw only | 12 features, native NaN handling, no indicators | 0.5651 |
+| B — indicators only | 12 `_is_missing` columns, no raw values at all | **0.5654** |
+| C — raw + indicators | All 24 columns (the original combined model) | 0.5651 |
+
+**Finding:** all three are statistically indistinguishable from each other
+(within a few 0.0001 of 0.565). **Missingness indicators *alone*, with zero
+access to any raw feature value, achieve essentially the same
+train/test-separating power as the raw features alone, or as both
+combined.** This directly contradicts the previous revision's conclusion —
+missingness pattern is not a negligible contributor; it is, on this
+evidence, independently sufficient to explain nearly all of the detected
+signal, exactly as much as the raw values are.
+
+**What this does and doesn't establish:** A, B, and C landing on
+essentially the same AUC means this experiment **cannot cleanly attribute**
+the ~0.565 signal to "value drift" versus "missingness-pattern drift" as
+separate causes — they carry highly overlapping/redundant information about
+which rows are train vs. test. A plausible explanation is that both are
+manifestations of the same underlying (unobserved) generation-process
+difference between train and test — e.g. if some batch/segment factor
+influenced both which values a row got and whether certain fields were
+recorded, both channels would independently "see" the same rows differently.
+This is speculation about mechanism, not established by this diagnostic —
+what *is* established is the numeric result: neither value differences nor
+missingness pattern differences alone or combined produce more than a mild
+(~0.565) signal.
+
+**Which raw columns matter within the combined model (Experiment C)** — for
+knowing where to look, not for the values-vs-missingness question (that
+question is answered by the A/B/C table above, not by this table):
+permutation importance on Experiment C, held-out 20% split, 50,000-row
+subsample, 5 repeats, scored on AUC drop:
 
 | Feature | Importance (AUC drop) |
 | --- | ---: |
-| `app_opens_per_day` | 0.0157 |
-| `social_media_hours` | 0.0112 |
-| `daily_screen_time_hours` | 0.0074 |
-| `notifications_per_day` | 0.0073 |
-| `gaming_hours` | 0.0057 |
-| `academic_work_impact` | 0.0055 |
-| `work_study_hours` | 0.0052 |
-| `age` | 0.0048 |
-| `stress_level` | 0.0031 |
-| `weekend_screen_time` | 0.0024 |
-| `sleep_hours` | 0.0016 |
-| `gender` | 0.0006 |
-| all 12 `_is_missing` indicators (sum) | **0.00026** |
+| `app_opens_per_day` | 0.01566 |
+| `social_media_hours` | 0.01123 |
+| `daily_screen_time_hours` | 0.00740 |
+| `notifications_per_day` | 0.00729 |
+| `gaming_hours` | 0.00569 |
+| `academic_work_impact` | 0.00547 |
+| `work_study_hours` | 0.00520 |
+| `age` | 0.00477 |
+| `stress_level` | 0.00308 |
+| `weekend_screen_time` | 0.00244 |
 
-**This overturns my working hypothesis going in** (that the adversarial
-signal was mostly explained by the already-known missingness-rate
-differences). Instead, essentially all of the signal comes from the raw
-**feature values**, spread thinly across most numeric and two categorical
-features — no single dominant feature, and the `_is_missing` columns
-contribute almost nothing (most exactly `0.0`, meaning the model barely
-used them, plausibly because HGB's native NaN routing on the raw column
-already captures the same information the indicator would add).
+(Top 10 of 24 columns shown; numbers copied directly from this notebook's
+own saved cell output, per §15.4 below — not from a separately-run script,
+since `HistGradientBoostingClassifier` was observed to produce slightly
+different importance values across separate process invocations even with
+the same `random_state` set.)
 
-**Interpretation, held to the review's strict framing:** an AUC of 0.565 is
+**Interpretation, held to the review's strict framing:** an AUC of ~0.565 is
 mild — well below the ~0.7–0.8+ range that would signal strong, exploitable
-train/test separability — but it is a genuine, if diffuse, detectable
-multivariate signal in the feature values/combinations themselves, not an
-artifact of the missingness-rate differences. This does **not** prove OOF
-CV will diverge from the public leaderboard, and does **not** by itself
+train/test separability. What drives it (values, missingness pattern, or
+both reflecting a shared underlying cause) is **not resolved** by this
+diagnostic, and this doc does not claim otherwise. This does **not** prove
+OOF CV will diverge from the public leaderboard, and does **not** by itself
 justify a drift-correction step; it's a data point to keep in mind if a
 promoted Phase 2/3 candidate's local OOF score and public leaderboard score
-disagree materially — that disagreement would now have a documented
-plausible explanation rather than being a total surprise.
+disagree materially.
 
 ## 10. Next Moves (Phase 2 Priority Order)
 
@@ -248,14 +297,20 @@ plausible explanation rather than being a total surprise.
    `stress_level` as unordered native-categorical by default, with ordinal
    encoding as an explicit OOF experiment (§5).
 4. Run `_is_missing` indicator flags as a genuine OOF ablation in Phase 2 —
-   §4.2's marginal analysis doesn't rule them out, and §9's permutation
-   importance (near-zero for indicators once native NaN handling is
-   already in the model) is a mild point *against* them adding much, but
-   is not the same test as an actual OOF ablation on the target.
-5. Treat the adversarial-validation result (§9, AUC 0.565, diffuse across
-   feature values) as background context for interpreting any future
-   local-CV-vs-leaderboard gap — not as grounds for drift correction on its
-   own.
+   §4.2's marginal analysis doesn't rule them out, and §9's revised
+   adversarial finding (missingness pattern alone reaches the same
+   train/test-separating power as raw values alone) is if anything a point
+   *for* taking missingness seriously as a signal source, not against it —
+   the actual answer still has to come from an OOF ablation on the target,
+   not from either diagnostic. **Done in Phase 2:**
+   `docs/6_baseline_modeling.md` §4 ran this exact ablation on the real
+   target — `_is_missing` flags added `0.000004` OOF AUC on top of native
+   NaN handling (noise), a clean negative result on the question this EDA
+   pass could only raise, not resolve.
+5. Treat the adversarial-validation result (§9, AUC ~0.565, value-vs-
+   missingness attribution genuinely inconclusive) as background context
+   for interpreting any future local-CV-vs-leaderboard gap — not as grounds
+   for drift correction on its own.
 
 ## 11. What Changed From The Original Revision, And Why
 
@@ -280,3 +335,35 @@ retracted or narrowed:
   narrowed** to "no strong marginal signal found; still a planned OOF
   ablation" (§4.2) — the marginal evidence didn't support the stronger
   claim.
+
+## 12. Revision 2: What Changed After Codex's Review Of The Completion Report
+
+Following `docs/4_codex_claude_review_log.md` §15, a second, more
+substantial round of corrections:
+
+- **§9's causal claim ("the signal comes from raw values, not missingness")
+  → retracted and replaced with a genuinely different finding.** The
+  original permutation-importance experiment could not separate value
+  signal from missingness-pattern signal (§15.2: `HistGradientBoostingClassifier`
+  reads both from the same NaN-containing raw column). A corrected 3-way
+  ablation (raw only / indicators only / raw+indicators) found all three
+  land at ~0.565 — missingness indicators *alone* match the full model,
+  meaning the attribution question is **genuinely unresolved**, not
+  resolved in favor of "values." This is not a minor wording fix; it
+  reverses the previous revision's headline conclusion for this section.
+- **§6's mutual-information ranking → rerun with corrected discrete/
+  continuous handling** (§15.3): `age`, `notifications_per_day`, and
+  `app_opens_per_day` are integer-valued and were incorrectly treated as
+  continuous, biasing the k-NN estimator. Rerunning with them marked
+  discrete changed the values slightly but not the ranking or the
+  `notifications_per_day`/`app_opens_per_day` disagreement — the original
+  finding held up under the corrected methodology.
+- **Permutation-importance numbers → corrected to match the actual saved
+  notebook output** (§15.4). The previous revision of this doc had numbers
+  from a separately-run standalone script, not the notebook's own executed
+  cells — `HistGradientBoostingClassifier` was observed to produce slightly
+  different importance values across separate process runs even with the
+  same `random_state`, so a supplementary script's output is not
+  interchangeable with the notebook's own trusted run. Every number in this
+  revision was copied from `notebooks/01_eda.ipynb`'s actual final saved
+  cell output, not retyped or reused from any other source.

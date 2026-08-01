@@ -19,6 +19,7 @@ data/*
 predictions/
 submission.csv
 scratch/
+catboost_info/
 
 # Staged notebook copies for `scripts/push_kaggle_kernel.sh` (notebooks/*.ipynb
 # are the single source of truth; these are regenerated at push time so the
