@@ -251,4 +251,8 @@ publishing the baseline notebook.
 
 ## User Promotion Decision
 
-Pending.
+**Approved on 2026-08-02 (Australia/Sydney).**
+
+The user accepted the submission-ready baseline after Claude implementation,
+Codex verification of both modes, and acknowledgement of the non-blocking
+Task 4 documentation/process follow-ups. Task 3 is complete.
