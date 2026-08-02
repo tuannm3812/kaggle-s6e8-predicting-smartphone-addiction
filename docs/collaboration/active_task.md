@@ -203,7 +203,51 @@ doc/Phase/agent references) returned 0 hits.
 
 ## Codex Review
 
-Pending.
+**Status: accepted; no blocking findings.**
+
+Codex independently verified `1e15fe1`:
+
+- the committed notebook is valid, has 15 sequential code execution counts,
+  zero error outputs, and `RUN_MODE = "evaluate"`;
+- the saved evaluation result retains HGB OOF AUC `0.95733`;
+- exactly one `HistGradientBoostingClassifier` constructor exists, inside
+  `build_model`, and both evaluation and full-fit submission inference call
+  that factory;
+- evaluation and submission use aligned feature selection and categorical
+  conversion;
+- invalid run modes and unknown model names are rejected;
+- an independent temporary submission-mode execution completed with zero
+  errors and wrote 296,302 rows;
+- the Task 2 validator accepted that artifact with 296,146 unique finite
+  predictions in `[8.12196190577754e-22, 1.0]` and exact test-ID order;
+- public-notebook prose contains no internal agent/checklist/review-log
+  narration; and
+- no data, credentials, generated submissions, or prediction artifacts were
+  committed.
+
+### Non-blocking follow-ups
+
+1. `docs/6_baseline_modeling.md` retains normal/reference fit times (for
+   example HGB 12s), while this commit's saved notebook happened to capture
+   severe system-load distortion (HGB 937s). A fresh independent evaluation
+   run returned normal timings again (HGB 15s, LightGBM 11–12s, CatBoost
+   72s). Before public publication in Task 4, label the documentation column
+   as reference/local runtime or otherwise clarify that wall times vary with
+   system load.
+2. Claude's evidence report says `git checkout --
+   notebooks/02_baseline_modeling.ipynb` was used to restore evaluation mode.
+   This violates the shared repository's safe-editing constraint, even though
+   no damage or lost user change was found. Do not use checkout-based file
+   restoration again; use a temporary notebook copy or an explicit patch.
+3. The phrase that the shared factory means the submission model can “never
+   silently diverge” is slightly too absolute: the factory guarantees
+   estimator-configuration parity, while feature/preprocessing parity still
+   depends on the surrounding shared data path. Current parity is verified;
+   soften this wording during the Task 4 public-documentation pass.
+
+These notes do not block Task 3 acceptance. Task 3 is ready for the user's
+promotion decision; Task 4 must address the two public-wording notes before
+publishing the baseline notebook.
 
 ## User Promotion Decision
 
