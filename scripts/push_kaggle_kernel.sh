@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Push a notebook to its public Kaggle kernel.
+# Push a notebook to its Kaggle kernel (public or private, per target).
 #
 # Copies the source notebook (the single source of truth, in notebooks/)
 # into its kernel-metadata.json folder under notebooks/kernels/, then runs
@@ -8,10 +8,13 @@
 #
 # Usage: scripts/push_kaggle_kernel.sh <eda|baseline|experiments>
 #
-# "experiments" pushes the same notebooks/02_baseline_modeling.ipynb source
-# to a separate, private kernel (notebooks/kernels/experiments/) used for
-# GPU-backed tuning/search runs -- kept out of the public baseline kernel's
-# version history.
+# "eda" and "baseline" push the public kernels. "experiments" pushes the
+# same notebooks/02_baseline_modeling.ipynb source to a separate, private,
+# GPU-enabled kernel (notebooks/kernels/experiments/) used for
+# tuning/search runs -- kept out of the public baseline kernel's version
+# history. GPU availability does not imply the model code actually runs on
+# GPU; none of this project's LightGBM/CatBoost/HGB configurations select
+# GPU computation.
 
 set -euo pipefail
 

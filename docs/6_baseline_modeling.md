@@ -132,10 +132,10 @@ mutually exclusive, sharing one model factory instead of drifting apart:
 - `RUN_MODE = "evaluate"` (the committed default) runs every OOF experiment
   above and reproduces the `0.95733` HGB result exactly.
 - `RUN_MODE = "submission"` skips all evaluation-only work, fits
-  `CHAMPION_NAME` (`hist_gradient_boosting` at this baseline milestone; see
-  `docs/9_experiment_ledger.md` for the current value after later tuning)
-  on all training rows through `build_model()`, and writes a
-  schema-validated CSV to
+  `CHAMPION_NAME` (`hist_gradient_boosting`; see
+  `docs/9_experiment_ledger.md` for a recommended tuned candidate pending
+  promotion approval) on all training rows through `build_model()`, and
+  writes a schema-validated CSV to
   `/kaggle/working/submission.csv` (or `../submission.csv` outside Kaggle).
   `build_submission()` checks exact columns, ID order, finite values, and
   the `[0, 1]` probability range before writing.
