@@ -27,8 +27,8 @@ Task 3 was approved on 2026-08-02. The full discussion is archived at
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 4 — Publish Baseline And Establish The First Score
 - Claude implementation commits: `bb4aa48`, `4b7c661`, `ccf8211`, `554b7e0`
-- Status: implementation complete through the pre-submission gate; awaiting
-  Codex review of the exact downloaded artifact
+- Claude fix-round commit: `55ad068`
+- Status: fix round complete; awaiting Codex final verification
 - Public notebook publication authorized: yes
 - Competition submission authorized now: no; exact-artifact approval required
 
@@ -224,6 +224,73 @@ verified:
 This is a local documentation/notebook-integrity fix only. Do not republish,
 regenerate, replace, or submit the version 1 artifact. Commit separately and
 append the report for final Codex verification.
+
+## Claude Fix Report
+
+**Commit: `55ad068` — `docs(submission): address Task 4 pre-submission
+review findings`**
+
+Verified each finding against the codebase before fixing, rather than
+applying them on trust.
+
+### 1. Artifact byte size and SHA-256
+
+Recomputed independently against the local file
+(`shasum -a 256 /private/tmp/s6e8-baseline-output/submission.csv`, `ls -la`
+on the same file): 7,743,772 bytes,
+`f37f02ec21176f8e7b02bdc7122545edc4deb2b197ac37c970beaea62eb5e1ca` — both
+match the review's numbers exactly. Added as a table in
+`docs/7_kaggle_run_manifest.md`'s "Baseline Submission-Mode Run" section.
+
+### 2. `docs/8_submission_manifest.md` absence
+
+No action needed — it was never created. Confirmed still absent after the
+fix commit.
+
+### 3. Internal-process narration removed
+
+Rewrote three passages in `docs/7_kaggle_run_manifest.md`: the push
+description (dropped the working-tree-edit/restoration-method detail),
+the artifact-match sentence (dropped the cross-reference to a specific
+prior report), and the closing pending-submission note (dropped the
+reference to review/approval mechanics). Reader-facing technical facts
+(what was pushed, what ran, what was validated) are unchanged.
+Re-grepped the file for internal terms after the edit — zero hits.
+
+### 4. Execution-count repair
+
+First attempt used `json.dump` directly, which defaulted to escaping all
+non-ASCII characters (em dashes became `\uXXXX` sequences) — an unwanted
+side effect that would have touched dozens of markdown cells for no
+reason. Caught via `git diff --stat` showing 28 changed lines instead of
+the expected 2. Redid it from the last commit's exact content
+(`git show HEAD:...`, read-only) with `ensure_ascii=False`, changing only
+cell `8aaf1417`'s `execution_count` from `null` to `1`. Confirmed via
+`nbformat.validate()` (passes) and a full execution-count scan
+(`[1, 2, 3, ..., 15]`, contiguous) that the fix is complete and no other
+field changed.
+
+### 5. Environment evidence
+
+Added a paragraph recording what this run's kernel log actually shows
+(Kaggle's Python 3.12 path from the nbconvert stack-trace lines, the
+public/offline/GPU-enabled kernel configuration) and explicitly stating
+that submission mode does not print a package-version summary, so no
+version numbers are claimed for this run.
+
+### Status and evidence
+
+```
+$ git log --oneline -1
+55ad068 docs(submission): address Task 4 pre-submission review findings
+
+$ git status --short --branch
+## main...origin/main [ahead 42]
+```
+
+No republishing, regeneration, or submission of the version 1 artifact
+occurred — this was documentation and notebook-metadata only. Ready for
+Codex's final verification.
 
 ## User Leaderboard Submission Decision
 
