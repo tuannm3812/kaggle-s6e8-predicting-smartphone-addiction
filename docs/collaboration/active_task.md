@@ -84,4 +84,7 @@ Pending.
 
 ## User Promotion Decision
 
-Pending.
+**Approved on 2026-08-02 (Australia/Sydney).**
+
+The user accepted the tested submission validator after Claude implementation
+and Codex verification. Task 2 is complete.
