@@ -206,7 +206,81 @@ gitignored, matching the existing `eda`/`baseline` pattern).
 
 ## Codex Review
 
-Pending.
+**Status: changes requested before promotion.**
+
+The private version 2 run is genuine and the main result is reproducible from
+its downloaded log. Codex independently verified kernel status `complete`,
+zero error/traceback output, the 12-row table, and the reported promotion-gate
+line. The log is 10,976 bytes with SHA-256
+`0da9b7fac3f4e83f58caaa35b3c9689fbe9c9e1136e5e3f8b828419b9cae7973`.
+No new leaderboard submission occurred.
+
+Fold generation and OOF alignment are correct: each candidate recreates the
+same seeded `StratifiedKFold`, predictions are assigned to `oof[val_idx]`,
+and paired resamples use identical row indices for champion and candidate.
+The `0.96166` LightGBM result is credible. The implementation is not yet ready
+for promotion because its durable model path and evidence claims need the
+following corrections.
+
+### Required fix round
+
+1. **Make the winning configuration a single source of truth.** Define the
+   LightGBM c3 dictionary once. Both E01 evaluation and
+   `build_model("lightgbm_tuned")` must consume that same object. Centralize
+   the LightGBM fit behavior so evaluation and full-data submission use the
+   same categorical-handling call, rather than relying on two presently
+   equivalent construction/fit paths.
+2. **Make the gate control the durable recommendation.** The notebook
+   currently hardcodes `CHAMPION_NAME = "lightgbm_tuned"` before calculating
+   `E01_WINNER`, and the gate only prints a name. Restore the active champion
+   and notebook version to the approved HGB baseline until the user promotion
+   decision. Record LightGBM c3 separately as the recommended candidate, and
+   add a fail-loud mapping/assertion between the executable gate winner and
+   the recommended model/config. A separate post-approval commit may switch
+   `CHAMPION_NAME` and `NOTEBOOK_VERSION`.
+3. **Rerun the corrected search in the private Kaggle kernel.** Publish no
+   public notebook and make no leaderboard submission. Print each candidate's
+   five exact fold AUCs in addition to the existing table, because the Task 5
+   contract requires fold AUCs rather than only fold standard deviation and
+   “folds beaten.” The rerun must also verify the centralized factory/fit path
+   and gate assertion. Record the new private version, UTC run time/status,
+   log byte size, and SHA-256.
+4. **Do not keep a hybrid notebook artifact.** The committed notebook mixes
+   stale execution counts/outputs with unexecuted changed cells. After the
+   private run evidence is captured, clear all saved outputs and execution
+   counts consistently in the canonical notebook. Treat it as clean source;
+   the next public champion run will repopulate outputs. Validate the notebook
+   and confirm every code cell has `execution_count = null`, no output, and
+   unchanged intended source.
+5. **Narrow statistical claims in `docs/9_experiment_ledger.md`.** Describe
+   LightGBM c3 as the provisional best/working recommendation among the 12
+   tested configurations, not proof that it is the reproducibly best family
+   or configuration. It was selected on the same OOF data used for inference;
+   its edge over HGB c3 is only about `0.00027` and has not yet received a
+   direct paired comparison. State that the row bootstrap conditions on the
+   already-fitted fold models and does not include refitting, CV-selection, or
+   multiple-comparison uncertainty. Report `P(delta > 0) = 1.00` as `200/200
+   bootstrap resamples positive`, not certainty about the true effect.
+6. **Narrow the budget/CatBoost conclusion.** Iteration/learning-rate budgets
+   were aligned, but tree structures, capacity, defaults, and observed compute
+   were not equivalent. Conclude only that these four CatBoost configurations
+   were weakest in this bounded search.
+7. **Make provenance reader-facing and auditable.** Remove references to a
+   Claude report or mutable collaboration log from the experiment ledger.
+   A private kernel URL may be recorded as owner provenance, but the committed
+   ledger must remain understandable without access to it. Record the
+   downloaded log fingerprint and exact printed evidence. Correct the claim
+   that the predeclared criteria were committed before execution: they may
+   have been written first, but criteria and results entered Git in the same
+   commit, so repository history cannot independently prove the timing.
+8. **Correct infrastructure wording.** Describe the target as private,
+   Kaggle-hosted, and GPU-enabled; do not call the search GPU-backed because
+   none of these model configurations selects GPU computation. Update the
+   script's generic “public kernel” header accordingly.
+
+These fixes require a separate commit and Claude report. Do not begin Task 6,
+switch the approved champion, publish a public kernel, or submit to the
+leaderboard before Codex review and the user's promotion decision.
 
 ## User Promotion Decision
 
