@@ -292,6 +292,33 @@ No republishing, regeneration, or submission of the version 1 artifact
 occurred — this was documentation and notebook-metadata only. Ready for
 Codex's final verification.
 
+## Codex Final Verification — Exact Artifact
+
+**Status: accepted; exact-artifact gate is ready for the user's decision.**
+
+Codex independently verified:
+
+- the public baseline kernel remains `complete`;
+- no competition submissions exist yet;
+- the exact file at
+  `/private/tmp/s6e8-baseline-output/submission.csv` remains 7,743,772 bytes
+  with SHA-256
+  `f37f02ec21176f8e7b02bdc7122545edc4deb2b197ac37c970beaea62eb5e1ca`;
+- fresh validation passes with 296,302 ordered rows, 296,146 unique
+  predictions, minimum `8.12196190577754e-22`, and maximum `1.0`;
+- the manifest records that identity and contains no internal-process
+  narration;
+- the environment statement is supported by the downloaded log and kernel
+  metadata without inventing package versions;
+- `docs/8_submission_manifest.md` remains absent until a real score exists;
+  and
+- the tracked notebook now has a consistent 1–15 execution sequence, with no
+  Python-source or saved-output change in the fix.
+
+No unresolved Codex findings remain. Any approval must identify the exact
+SHA-256 above. Do not regenerate or replace the file between approval and
+submission.
+
 ## User Leaderboard Submission Decision
 
 Pending.
