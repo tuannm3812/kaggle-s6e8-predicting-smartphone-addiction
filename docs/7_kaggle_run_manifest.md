@@ -168,5 +168,6 @@ path (`fit_champion_and_predict(CHAMPION_NAME, ...)` calling
 `build_model(CHAMPION_NAME)`) is the same factory call the evaluation path
 uses — no separate Kaggle-only model-construction code exists.
 
-This artifact has not been submitted to the competition leaderboard.
-Submission is pending review of this exact file and explicit approval.
+The exact artifact above was submitted after explicit approval. Kaggle
+completed scoring with public ROC AUC `0.95865`; the submission and decision
+are recorded in `docs/8_submission_manifest.md`.

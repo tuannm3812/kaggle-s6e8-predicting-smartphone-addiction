@@ -321,8 +321,26 @@ submission.
 
 ## User Leaderboard Submission Decision
 
-Pending.
+**Approved on 2026-08-02 (Australia/Sydney).**
+
+The user approved submission of the exact 7,743,772-byte artifact with
+SHA-256
+`f37f02ec21176f8e7b02bdc7122545edc4deb2b197ac37c970beaea62eb5e1ca`.
+Codex revalidated the hash, size, schema, IDs, and probability contract
+immediately before upload. Kaggle accepted the submission with description
+`baseline-v1 HGB public notebook v1`.
 
 ## Leaderboard Result
 
-Pending; record only after an explicitly approved submission finishes.
+**Status: complete.**
+
+- Submission UTC: `2026-08-02 05:33:21.660`
+- Kaggle status: `SubmissionStatus.COMPLETE`
+- Public AUC: `0.95865`
+- Local OOF AUC: `0.95733`
+- Public minus OOF: `+0.00132`
+- Private score: not available during the competition
+
+The first-score milestone is complete. The baseline is established for
+comparison, not declared final; future promotion decisions remain based on
+paired OOF evidence rather than public-score chasing.
