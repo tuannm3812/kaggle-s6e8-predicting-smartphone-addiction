@@ -157,19 +157,17 @@ provably the best family:
   model/hyperparameter selection itself. Treat the reported interval as a
   lower bound on true uncertainty, not the full picture.
 
-### Recommendation (not a promotion)
+### Promotion decision
 
-`e01_lightgbm_c3`'s configuration is recorded as the E01 recommendation and
+`e01_lightgbm_c3`'s configuration was approved as the provisional working
+champion after review of the E01 recommendation. It is
 wired into `build_model("lightgbm_tuned")` (referencing the same
 `LGBM_CONFIGS[2]` dictionary the search used, not a duplicated literal), so
-it is available to fit and submit without further code changes. It is
-**not** the active champion: `CHAMPION_NAME` remains
-`"hist_gradient_boosting"`, and `v1c_hist_gradient_boosting` remains the
+the active `CHAMPION_NAME` is now `"lightgbm_tuned"` and the notebook version
+is `"e01-lightgbm-v1"`. The `v1c_hist_gradient_boosting` result remains the
 notebook's fixed comparison baseline (`build_model("hist_gradient_boosting")`
 directly, independent of `CHAMPION_NAME`) — it is not deleted, since it is
-E01's own reference floor, not a discarded result. Switching `CHAMPION_NAME`
-to `"lightgbm_tuned"` is a separate, explicit, post-approval action once the
-user makes a promotion decision.
+E01's own reference floor, not a discarded result.
 
 Sanity check on `lightgbm_tuned`'s OOF predictions (same check the notebook
 applies to the current champion): finite, within `[0, 1]`, 691,367 of
@@ -179,8 +177,9 @@ displayed precision).
 
 ### Open questions for Task 6 and Task 7
 
-- If `lightgbm_tuned` is promoted, Task 7 ("Publish Champion") would publish
-  it in place of the HGB baseline already public from Task 4.
+- Task 7 ("Publish Champion") will publish `lightgbm_tuned` in place of the
+  HGB baseline already public from Task 4, unless Task 6 finds stronger paired
+  evidence for a different candidate or blend.
 - Task 6's entry condition ("no Task 5 candidate beats the current champion,
   or two strong candidates have prediction correlation below 0.995 with
   complementary residuals") is not evaluated here — the relevant

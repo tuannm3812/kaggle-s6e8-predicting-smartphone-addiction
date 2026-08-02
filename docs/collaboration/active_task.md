@@ -461,4 +461,11 @@ evidence. Do not publish or submit at this gate.
 
 ## User Promotion Decision
 
-Pending.
+**Approved on 2026-08-02 (Australia/Sydney).**
+
+The user approved `e01_lightgbm_c3` as the provisional working champion after
+review of the full Task 5 evidence and caveats. The active notebook state is
+now `CHAMPION_NAME = "lightgbm_tuned"` and
+`NOTEBOOK_VERSION = "e01-lightgbm-v1"`. This decision authorizes the local
+champion switch and Task 6 analysis only; it does not authorize public
+publication or leaderboard submission.
