@@ -374,6 +374,35 @@ Clean working tree. `RUN_MODE = "evaluate"`, `CHAMPION_NAME =
 competition data, credentials, generated submission artifacts, or public
 kernel push occurred in this fix round.
 
+## Codex Re-review
+
+**Status: two documentation corrections requested; code and version 3
+evidence accepted.**
+
+Codex independently verified the version 3 log (13,368 bytes, matching
+SHA-256), all 12 result rows, all 60 printed fold AUCs, bootstrap values,
+selection/refit caveats, gate recommendation, and absence of errors. The
+notebook is valid source-only state; HGB remains active; LightGBM c3 uses the
+shared configuration and fit behavior; and gate drift fails loudly.
+
+Two statements in `docs/9_experiment_ledger.md` remain factually incorrect:
+
+1. The opening says the hypothesis was “committed as its own step” before
+   execution and results entered a later commit. Git shows the file was first
+   created in `4bcbd78` with criteria and results together. Replace this with
+   an honest statement: the criteria were documented before execution during
+   the working session, but repository history does not independently prove
+   that ordering because criteria and results entered Git in the same commit.
+2. The version-history paragraph says versions 1–2 surfaced results only via
+   rendered display. Version 1 had that gap; version 2 printed the complete
+   12-row statistical table but omitted individual fold AUCs; version 3 added
+   the fold-AUC prints and is the evidence of record. State that sequence
+   accurately.
+
+Make only these reader-facing ledger corrections in a separate commit and
+append the result for final verification. Do not rerun the kernel, change the
+notebook/model state, begin Task 6, publish, or submit.
+
 ## User Promotion Decision
 
 Pending.
