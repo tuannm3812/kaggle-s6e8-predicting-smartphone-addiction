@@ -26,7 +26,9 @@ Task 3 was approved on 2026-08-02. The full discussion is archived at
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 4 — Publish Baseline And Establish The First Score
-- Status: ready for Claude implementation through the pre-submission gate
+- Claude implementation commits: `bb4aa48`, `4b7c661`, `ccf8211`, `554b7e0`
+- Status: implementation complete through the pre-submission gate; awaiting
+  Codex review of the exact downloaded artifact
 - Public notebook publication authorized: yes
 - Competition submission authorized now: no; exact-artifact approval required
 
@@ -68,7 +70,113 @@ Do not call `kaggle competitions submit` during this phase.
 
 ## Claude Implementation Report
 
-Pending.
+**Status: complete through the pre-submission gate. Stopped here — no
+leaderboard submission attempted.**
+**Commits: `bb4aa48`, `4b7c661`, `ccf8211`, `554b7e0`**
+
+### 1. Addressed the two Task 3 public-wording follow-ups (scope step 1)
+
+- `bb4aa48` — `docs/6_baseline_modeling.md`: labeled the progression
+  table's fit-time column as local reference timing that varies with
+  system load (explicitly citing the 937s-under-load vs. 12s-normal
+  contrast already on record); softened "can never silently diverge" to
+  precise estimator-configuration-parity language, noting that
+  feature/preprocessing parity is a property of the shared data-loading
+  cell, not the factory itself.
+- `4b7c661` — the same overclaim ("can never silently diverge") was also
+  present in the notebook's own Model Factory markdown cell (`fe489de8`),
+  which is public-facing prose in the published notebook, not just the
+  docs file. Reworded identically. Found by re-grepping the notebook for
+  the flagged phrase rather than assuming the docs fix covered it.
+
+### 2. Verified kernel metadata (scope step 3)
+
+`notebooks/kernels/baseline_modeling/kernel-metadata.json`: `"is_private":
+false`, `"enable_internet": false`, `"competition_sources":
+["playground-series-s6e8"]`, `"dataset_sources": []`, `"kernel_sources":
+[]` — public, offline-safe, attached only to this competition. No changes
+needed.
+
+### 3. Pushed the baseline notebook (scope step 2/4)
+
+Set the tracked notebook's `RUN_MODE` to `"submission"` as an uncommitted
+working-tree edit (not a new commit), ran `scripts/push_kaggle_kernel.sh
+baseline`. Kaggle accepted version 1 of
+`tuannm3812/smartphone-addiction-baseline-modeling`.
+`kaggle kernels status` reported `KernelWorkerStatus.COMPLETE`.
+
+### 4. Downloaded and validated the exact artifact (scope step 5/6)
+
+```
+$ kaggle kernels output tuannm3812/smartphone-addiction-baseline-modeling -p /private/tmp/s6e8-baseline-output
+Output file downloaded to /private/tmp/s6e8-baseline-output/submission.csv
+Kernel log downloaded to /private/tmp/s6e8-baseline-output/smartphone-addiction-baseline-modeling.log
+
+$ python3 scripts/verify_submission.py /private/tmp/s6e8-baseline-output/submission.csv
+{'rows': 296302, 'unique_predictions': 296146, 'minimum': 8.12196190577754e-22, 'maximum': 1.0}
+exit: 0
+```
+
+296,302 rows, correct schema, IDs in test order (enforced by the
+validator), all predictions finite and in `[0, 1]`. The kernel log
+contains no `error`/`traceback` string; full stdout was exactly:
+
+```
+X: (691369, 12), y: (691369,), X_test: (296302, 12)
+Wrote /kaggle/working/submission.csv: (296302, 2)
+```
+
+`unique_predictions`/`minimum`/`maximum` match exactly the independent
+local `RUN_MODE = "submission"` run from Task 3's implementation report,
+for the same committed champion configuration — cross-checked, not
+assumed.
+
+### 5. Restored `RUN_MODE = "evaluate"` without `git checkout` (scope step 1 / workflow rule 4)
+
+Per the new workflow rule banning destructive git restoration in this
+shared checkout, `ccf8211` restores `RUN_MODE = "evaluate"` via an
+explicit `NotebookEdit` patch (re-supplying the exact original cell
+source) rather than `git checkout --`. The only resulting diff was a
+cosmetic JSON formatting change in that one cell (source as a single
+string instead of a line list, `execution_count` reset to `null`) — a
+side effect of the edit tool, not a content change; verified the cell's
+Python source text is byte-identical to the pre-push committed version.
+
+### 6. Recorded the trusted run before submission (scope step 5)
+
+`554b7e0` adds a `02_baseline_modeling.ipynb` row and a "Baseline
+Submission-Mode Run" section to `docs/7_kaggle_run_manifest.md`: public
+URL, Kaggle version 1, `complete` status, `lastRunTime` `2026-08-02
+04:10:56.897 UTC` (from `kaggle kernels list -m`), execution-log
+timestamps, and the full artifact-validation evidence above. Explicitly
+notes the trusted OOF AUC (`0.95733`) comes from the local evaluate-mode
+run recorded in `docs/6_baseline_modeling.md`, not this submission-mode
+Kaggle run, since submission mode skips evaluation by design.
+
+### 7. Commits and status
+
+```
+$ git log --oneline -4
+554b7e0 docs(submission): record public baseline Kaggle run
+ccf8211 chore(modeling): restore RUN_MODE=evaluate after Kaggle submission-mode push
+4b7c661 docs(modeling): soften factory-parity wording in notebook prose
+bb4aa48 docs(modeling): soften fit-time and factory-parity wording
+
+$ git status --short --branch
+## main...origin/main [ahead 39]
+```
+
+Clean working tree (aside from this report). No competition data,
+credentials, or the downloaded `submission.csv` committed — it remains
+only in `/private/tmp/s6e8-baseline-output/`, outside the repository.
+
+### 8. Explicit stop
+
+**No leaderboard submission was attempted.** Per workflow rule 6, this
+requires Codex review of the exact downloaded artifact
+(`/private/tmp/s6e8-baseline-output/submission.csv`) and the user's
+explicit approval first (scope step 6 / `## User Leaderboard Submission
+Decision` below), which has not happened yet.
 
 ## Codex Review And Exact-Artifact Gate
 
