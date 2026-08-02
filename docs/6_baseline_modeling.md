@@ -14,7 +14,13 @@ there is no separate submission-only model definition.
 
 ## 1. Progression Table
 
-| Rank | Model | OOF AUC | Fold std | Fit time (5 folds) |
+Fit times below are local reference timings from one run on this
+checkout's hardware, not a controlled benchmark — they vary with system
+load (a later run of identical code measured HGB at 937s under heavy
+load vs. the 12s shown here) and should be read as rough relative
+ordering, not exact wall-clock guarantees.
+
+| Rank | Model | OOF AUC | Fold std | Fit Time (Reference, 5 Folds) |
 | --- | --- | ---: | ---: | ---: |
 | 1 | `v1c_hist_gradient_boosting` | **0.95733** | 0.00076 | 12s |
 | 2 | `v3_lightgbm_plus_engineered` | 0.95533 | 0.00062 | 11s |
@@ -132,8 +138,12 @@ mutually exclusive, sharing one model factory instead of drifting apart:
   `build_submission()` checks exact columns, ID order, finite values, and
   the `[0, 1]` probability range before writing.
 - Both paths call the same `build_model(name)` factory, so the fitted
-  submission model can never silently diverge from the model the OOF score
-  was measured on.
+  submission model's estimator configuration (class and hyperparameters)
+  is guaranteed identical to the one the OOF score was measured on. This
+  covers estimator-configuration parity; feature selection and categorical
+  conversion are shared through the same data-loading cell rather than the
+  factory itself, and were separately verified to match between the two
+  modes.
 
 ## 9. What Feeds Phase 3
 
@@ -151,7 +161,9 @@ mutually exclusive, sharing one model factory instead of drifting apart:
 5. **Logistic regression is retired, not fixed** (§3) — a stabilization
    attempt was tried and still failed; root-causing the solver divergence is
    not blocking, since it's a sanity floor rather than a candidate.
-6. CatBoost's per-fold fit time (70s) is roughly 6× LightGBM's (11s) at
-   comparable settings — a real cost to weigh against any accuracy gain
-   CatBoost shows once properly tuned, given the ~10 hrs/week budget in
-   `docs/archive/4_codex_claude_review_log.md` §1.
+6. CatBoost's reference per-fold fit time (70s) is roughly 6x LightGBM's
+   (11s) at comparable settings in this same run — a real relative cost to
+   weigh against any accuracy gain CatBoost shows once properly tuned,
+   given the ~10 hrs/week budget in
+   `docs/archive/4_codex_claude_review_log.md` §1, even though the
+   absolute seconds are reference timings that vary with system load (§1).
