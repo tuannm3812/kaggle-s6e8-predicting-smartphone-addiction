@@ -6,6 +6,7 @@ provisional values.
 | Notebook | Public URL | Kaggle Version | Status | Runtime | Local Comparison | UTC Execution Date |
 | --- | --- | --- | --- | --- | --- | --- |
 | `01_eda.ipynb` | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda | 7 | `complete` | ~166s (11.0s–176.6s per kernel log timestamps) | All retrievable printed outputs were compared. Computed findings match except for the documented 0.0001 A/C differences; runtime package versions differ as documented below. | 2026-08-01 14:01:19.273 UTC (`lastRunTime`, `kaggle kernels list -m`) |
+| `02_baseline_modeling.ipynb` (`RUN_MODE = "submission"`) | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling | 1 | `complete` | ~31s total (data load 18.9s; fit + predict + write 12.5s, per kernel log timestamps) | Downloaded artifact validated with `scripts/verify_submission.py`; see §"Baseline Submission-Mode Run" below. | 2026-08-02 04:10:56.897 UTC (`lastRunTime`, `kaggle kernels list -m`) |
 
 ## Version History
 
@@ -102,3 +103,60 @@ whatever this machine's default Python environment has installed, not a
 pinned match to Kaggle's image. These are the first real trusted-runtime
 versions recorded for this project — use them, not local versions, if/when
 `requirements.txt` is pinned.
+
+## Baseline Submission-Mode Run
+
+The trusted OOF evidence for `02_baseline_modeling.ipynb` (HGB OOF AUC
+`0.95733`) was established locally and recorded in
+`docs/6_baseline_modeling.md`; `RUN_MODE = "submission"` skips all
+evaluation work by design, so this Kaggle run is not expected to reproduce
+that number — it exists to prove the champion configuration fits and
+predicts cleanly inside Kaggle's own execution environment and produces a
+valid competition artifact.
+
+**Push.** The tracked notebook's `RUN_MODE` config cell was temporarily
+set to `"submission"` (an uncommitted working-tree edit, restored
+afterward via an explicit patch, not `git checkout`), then pushed with
+`scripts/push_kaggle_kernel.sh baseline`. Kaggle version 1 completed
+successfully; `RUN_MODE` was restored to `"evaluate"` in the repository
+immediately after, matching the committed source used for the trusted OOF
+evidence.
+
+**Execution log.** No `error`/`traceback` string anywhere in the version-1
+kernel log. Full stdout:
+
+```
+X: (691369, 12), y: (691369,), X_test: (296302, 12)
+Wrote /kaggle/working/submission.csv: (296302, 2)
+```
+
+Timestamps in the log: data load completed at 18.9s, the write completed
+at 31.4s (so fit + predict + write took ~12.5s) — both on the notebook's
+GPU-enabled Kaggle runtime, not comparable to the CPU-only local reference
+timings in `docs/6_baseline_modeling.md` §1.
+
+**Artifact validation.** Downloaded via `kaggle kernels output` to
+`/private/tmp/s6e8-baseline-output/submission.csv` (temporary directory,
+not committed), then validated:
+
+```
+$ python3 scripts/verify_submission.py /private/tmp/s6e8-baseline-output/submission.csv
+{'rows': 296302, 'unique_predictions': 296146, 'minimum': 8.12196190577754e-22, 'maximum': 1.0}
+exit: 0
+```
+
+296,302 rows (matches `data/test.csv`), IDs in test order, all predictions
+finite and within `[0, 1]`. `unique_predictions`, `minimum`, and `maximum`
+match exactly what a local `RUN_MODE = "submission"` run produced for the
+same committed champion configuration, run separately during Task 3's
+implementation report.
+
+**Champion factory confirmation.** The published notebook's submission
+path (`fit_champion_and_predict(CHAMPION_NAME, ...)` calling
+`build_model(CHAMPION_NAME)`) is the same factory call the evaluation path
+uses — no separate Kaggle-only model-construction code exists.
+
+This artifact has not been submitted to the competition leaderboard. Per
+the shared collaboration log's workflow rules, that requires Codex review
+of this exact downloaded file and explicit user approval; see
+`docs/collaboration/active_task.md`.
