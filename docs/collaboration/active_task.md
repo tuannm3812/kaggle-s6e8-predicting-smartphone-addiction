@@ -48,9 +48,10 @@ Task 3 was approved on 2026-08-02. The full discussion is archived at
 5. Download the Kaggle-generated `submission.csv` to a temporary directory.
 6. Validate that exact file with `scripts/verify_submission.py` against the
    local test/sample contract.
-7. Update `docs/7_kaggle_run_manifest.md` and create
-   `docs/8_submission_manifest.md` with actual URL, version, runtime,
+7. Update `docs/7_kaggle_run_manifest.md` with actual URL, version, runtime,
    environment, OOF AUC, artifact checks, and pending submission status.
+   Create `docs/8_submission_manifest.md` only after an approved leaderboard
+   submission returns an actual score; do not write provisional values.
 8. Commit the reviewed public-run evidence and append Claude's report here.
 
 Do not commit the submission CSV, prediction arrays, data, or credentials.
@@ -180,7 +181,49 @@ Decision` below), which has not happened yet.
 
 ## Codex Review And Exact-Artifact Gate
 
-Pending.
+**Status: changes requested before exact-artifact approval.**
+
+The public baseline run and artifact are technically valid. Codex independently
+verified:
+
+- the live public kernel reports `complete`;
+- metadata is public, internet-disabled, and attached only to S6E8;
+- the pushed notebook copy uses `RUN_MODE = "submission"`, the recorded
+  champion, and the shared factory;
+- the exact downloaded artifact passes the validator with 296,302 rows,
+  unique ordered IDs, 296,146 unique predictions, and finite values in
+  `[8.12196190577754e-22, 1.0]`;
+- the artifact is 7,743,772 bytes with SHA-256
+  `f37f02ec21176f8e7b02bdc7122545edc4deb2b197ac37c970beaea62eb5e1ca`;
+  and
+- `kaggle competitions submissions` returns `No submissions found`.
+
+### Required fix round
+
+1. Add the artifact byte size and SHA-256 above to
+   `docs/7_kaggle_run_manifest.md`. The exact hash must identify the file at
+   the user approval and submission gates.
+2. Keep `docs/8_submission_manifest.md` absent until the leaderboard returns
+   a real score. The earlier pre-submission instruction to create it was an
+   error in this handoff and has been corrected above; Claude correctly
+   followed the controlling implementation plan.
+3. Remove internal-process narration from the public run manifest, including
+   references to Task 3's implementation report, the collaboration log,
+   agent review/approval mechanics, and how a shared-checkout edit was
+   restored. Retain the technical run, validation, and pending-submission
+   facts in reader-facing language.
+4. Repair the tracked evaluate-mode notebook's saved execution sequence: its
+   first code cell currently has `execution_count = null` while the remaining
+   cells are 2–15. Restore a structurally consistent 1–15 sequence without
+   changing Python source, saved analytical outputs, or public version 1.
+5. Record the environment evidence actually available for this baseline run:
+   Kaggle Python 3.12 paths from the log, public/offline GPU-enabled kernel
+   metadata, and the fact that package versions were not emitted by this run.
+   Do not infer or invent exact package versions from another notebook.
+
+This is a local documentation/notebook-integrity fix only. Do not republish,
+regenerate, replace, or submit the version 1 artifact. Commit separately and
+append the report for final Codex verification.
 
 ## User Leaderboard Submission Decision
 
