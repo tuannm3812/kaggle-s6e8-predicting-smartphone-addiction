@@ -114,13 +114,10 @@ that number — it exists to prove the champion configuration fits and
 predicts cleanly inside Kaggle's own execution environment and produces a
 valid competition artifact.
 
-**Push.** The tracked notebook's `RUN_MODE` config cell was temporarily
-set to `"submission"` (an uncommitted working-tree edit, restored
-afterward via an explicit patch, not `git checkout`), then pushed with
-`scripts/push_kaggle_kernel.sh baseline`. Kaggle version 1 completed
-successfully; `RUN_MODE` was restored to `"evaluate"` in the repository
-immediately after, matching the committed source used for the trusted OOF
-evidence.
+**Push.** The public notebook was pushed with `RUN_MODE = "submission"`,
+`CHAMPION_NAME = "hist_gradient_boosting"`; the repository's committed
+copy uses `RUN_MODE = "evaluate"`, matching the source used for the
+trusted OOF evidence above.
 
 **Execution log.** No `error`/`traceback` string anywhere in the version-1
 kernel log. Full stdout:
@@ -131,9 +128,18 @@ Wrote /kaggle/working/submission.csv: (296302, 2)
 ```
 
 Timestamps in the log: data load completed at 18.9s, the write completed
-at 31.4s (so fit + predict + write took ~12.5s) — both on the notebook's
-GPU-enabled Kaggle runtime, not comparable to the CPU-only local reference
+at 31.4s (so fit + predict + write took ~12.5s), on the notebook's
+GPU-enabled Kaggle runtime — not comparable to the CPU-only local reference
 timings in `docs/6_baseline_modeling.md` §1.
+
+**Environment.** This run's kernel log shows Kaggle's Python 3.12
+environment (`/usr/local/lib/python3.12/dist-packages/...` in the
+nbconvert/HTML-export stack trace lines) and confirms the kernel ran on
+the public, internet-disabled, GPU-enabled configuration declared in
+`notebooks/kernels/baseline_modeling/kernel-metadata.json`. Submission
+mode does not print a package-version summary, so exact library versions
+for this run are not recorded here; do not assume they match the EDA
+notebook's trusted-version table above.
 
 **Artifact validation.** Downloaded via `kaggle kernels output` to
 `/private/tmp/s6e8-baseline-output/submission.csv` (temporary directory,
@@ -147,16 +153,20 @@ exit: 0
 
 296,302 rows (matches `data/test.csv`), IDs in test order, all predictions
 finite and within `[0, 1]`. `unique_predictions`, `minimum`, and `maximum`
-match exactly what a local `RUN_MODE = "submission"` run produced for the
-same committed champion configuration, run separately during Task 3's
-implementation report.
+match exactly what an independent local `RUN_MODE = "submission"` run
+produced for the same committed champion configuration.
+
+File identity, for the user-approval and submission gates:
+
+| Property | Value |
+| --- | --- |
+| Bytes | 7,743,772 |
+| SHA-256 | `f37f02ec21176f8e7b02bdc7122545edc4deb2b197ac37c970beaea62eb5e1ca` |
 
 **Champion factory confirmation.** The published notebook's submission
 path (`fit_champion_and_predict(CHAMPION_NAME, ...)` calling
 `build_model(CHAMPION_NAME)`) is the same factory call the evaluation path
 uses — no separate Kaggle-only model-construction code exists.
 
-This artifact has not been submitted to the competition leaderboard. Per
-the shared collaboration log's workflow rules, that requires Codex review
-of this exact downloaded file and explicit user approval; see
-`docs/collaboration/active_task.md`.
+This artifact has not been submitted to the competition leaderboard.
+Submission is pending review of this exact file and explicit approval.
