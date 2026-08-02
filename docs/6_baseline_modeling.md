@@ -4,6 +4,14 @@ From `notebooks/02_baseline_modeling.ipynb`, executed end-to-end 2026-08-01
 (0 errors, 5-fold `StratifiedKFold(shuffle=True, random_state=42)` OOF
 throughout). Findings first, evidence after, per `docs/0_coding_standards.md`.
 
+The notebook has two explicit run modes selected by a `RUN_MODE:
+Literal["evaluate", "submission"]` configuration value (rejected immediately
+if set to anything else): `evaluate` reproduces every result below;
+`submission` fits the configured `CHAMPION_NAME` on all training rows via a
+single `build_model(name)` factory and writes a schema-validated
+`submission.csv`. Both modes share the same model-construction code path —
+there is no separate submission-only model definition.
+
 ## 1. Progression Table
 
 | Rank | Model | OOF AUC | Fold std | Fit time (5 folds) |
@@ -14,8 +22,8 @@ throughout). Findings first, evidence after, per `docs/0_coding_standards.md`.
 | 3 | `v2a_lightgbm_native_cat` | 0.95480 | 0.00068 | 11s |
 | 5 | `v2d_lightgbm_class_weight_balanced` | 0.95463 | 0.00058 | 11s |
 | 6 | `v2b_catboost_native_cat` | 0.94190 | 0.00063 | 70s |
-| 7 | `v1b_logistic_regression` | 0.91145 | 0.00081 | — (numerically unstable, see §3) |
-| 8 | `v1a_constant` | 0.50000 | 0.00000 | theoretical floor, not fit |
+| 7 | `v1a_constant` | 0.50000 | 0.00000 | theoretical floor, not fit |
+| — | `v1b_logistic_regression` | *(retired)* | — | — (numerically unstable, see §3; not in the trusted comparison) |
 
 ## 2. Headline Finding: The Sanity Baseline Beat The "Strong Models"
 
@@ -37,21 +45,25 @@ parameter search first" rather than skipping straight to picking a model
 family. Do not treat v1c as the presumptive champion without giving
 LightGBM/CatBoost a comparable tuning pass first.
 
-## 3. Logistic Regression: Numerically Unstable, Result Unreliable
+## 3. Logistic Regression: Retired, Not Measured
 
 `v1b_logistic_regression` triggered `RuntimeWarning`s (`divide by zero`,
 `overflow`, `invalid value encountered in matmul`) during `lbfgs` solver
 fitting, despite going through `SimpleImputer` + `StandardScaler` for
 numeric features and `SimpleImputer` + `OneHotEncoder` for categoricals —
-the pipeline that should prevent exactly this. The resulting OOF AUC
-(0.9114) is plausible in isolation (well below the tree models, well above
-random) but was produced by a solver that did not converge cleanly, so
-**treat this number as directional only, not a reliable measurement**. Not
-investigated further here — logistic regression is a sanity floor, not a
-modeling candidate for this problem, and time is better spent on the tuning
-pass in §2. Flagged for anyone reusing this pipeline code elsewhere: the
-divergence needs root-causing (likely solver/regularization related) before
-trusting a logistic-regression OOF number from this exact setup again.
+the pipeline that should prevent exactly this. A second, more conservative
+configuration (`solver="saga", penalty="l2", C=0.1, max_iter=2_000,
+random_state=SEED, n_jobs=-1`) was tried specifically to stabilize it and
+produced the same warnings when run in isolation on the fixed folds. Per
+the documented decision rule, logistic regression is now formally
+**retired** (`RUN_LOGISTIC = False`) rather than reported as measured: its
+OOF AUC is excluded from the trusted comparison table in §1, and the block
+is skipped entirely rather than executed and caveated. Not investigated
+further — logistic regression is a sanity floor, not a modeling candidate
+for this problem, and time is better spent on the tuning pass in §2.
+Flagged for anyone reusing this pipeline code elsewhere: the divergence
+needs root-causing (likely solver/regularization related) before trusting a
+logistic-regression OOF number from this exact setup again.
 
 ## 4. `_is_missing` Flags: Clean Answer — No Effect
 
@@ -105,7 +117,25 @@ All pass. This is a sanity gate, not a promotion decision — Phase 3 still
 needs the fold-consistency and paired-bootstrap checks before anything is
 declared champion.
 
-## 8. What Feeds Phase 3
+## 8. Reproducibility: Evaluate And Submission Modes
+
+The notebook's `RUN_MODE` flag makes the two things it's used for —
+generating OOF evidence and generating a Kaggle submission — explicit and
+mutually exclusive, sharing one model factory instead of drifting apart:
+
+- `RUN_MODE = "evaluate"` (the committed default) runs every OOF experiment
+  above and reproduces the `0.95733` HGB result exactly.
+- `RUN_MODE = "submission"` skips all evaluation-only work, fits
+  `CHAMPION_NAME` (currently `hist_gradient_boosting`) on all training rows
+  through `build_model()`, and writes a schema-validated CSV to
+  `/kaggle/working/submission.csv` (or `../submission.csv` outside Kaggle).
+  `build_submission()` checks exact columns, ID order, finite values, and
+  the `[0, 1]` probability range before writing.
+- Both paths call the same `build_model(name)` factory, so the fitted
+  submission model can never silently diverge from the model the OOF score
+  was measured on.
+
+## 9. What Feeds Phase 3
 
 1. **Tune before comparing model families.** §2's gap is a floor-setting
    artifact of mismatched hyperparameters, not a verdict on HGB vs.
@@ -118,8 +148,9 @@ declared champion.
    check once a tuned champion exists).
 4. **Default to unweighted** (§6) — resolved, don't carry `class_weight`
    forward as a tuning dimension.
-5. **Fix or drop the logistic-regression pipeline** (§3) before reusing it
-   — not blocking, since it's a sanity floor rather than a candidate.
+5. **Logistic regression is retired, not fixed** (§3) — a stabilization
+   attempt was tried and still failed; root-causing the solver divergence is
+   not blocking, since it's a sanity floor rather than a candidate.
 6. CatBoost's per-fold fit time (70s) is roughly 6× LightGBM's (11s) at
    comparable settings — a real cost to weigh against any accuracy gain
    CatBoost shows once properly tuned, given the ~10 hrs/week budget in
