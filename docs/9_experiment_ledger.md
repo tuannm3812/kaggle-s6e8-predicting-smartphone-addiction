@@ -1,10 +1,12 @@
 # Experiment Ledger
 
-Every experiment's hypothesis and promotion criteria are recorded in this
+Every experiment's hypothesis and promotion criteria are documented in this
 file before its results, per `docs/0_coding_standards.md`. The hypothesis
-section below was written and committed as its own step before any
-candidate was run; results were appended in a later commit once the
-notebook run completed, and are not edited to fit the outcome.
+section below was written during the working session before any candidate
+was run, and results are not edited to fit the outcome — but this is not
+independently provable from repository history: the criteria and the first
+results both entered Git in the same commit (`4bcbd78`), so commit history
+alone cannot establish that ordering.
 
 ## E01 — Comparable GBDT Budget
 
@@ -47,10 +49,12 @@ default_rng(42)`), matching the plan's specification exactly.
 
 Executed on a private, GPU-enabled Kaggle kernel dedicated to
 experimentation, kept separate from the public baseline notebook. Version 3
-is the evidence of record (versions 1–2 used the same search but surfaced
-results only through the notebook's rendered display, not the run log; version
-3 adds explicit printed output for every value below, including each
-candidate's individual fold AUCs).
+is the evidence of record. Version 1 ran the same search but surfaced the
+results table only through the notebook's rendered display, not the run
+log. Version 2 added `print()` output for the full 12-row statistical
+table but still omitted each candidate's individual fold AUCs. Version 3
+added those fold-AUC prints and the fail-loud gate-recommendation
+assertion, and is the version this section's numbers are taken from.
 
 - Kaggle kernel status: `complete`.
 - Run completion observed: `2026-08-02 10:39:12 UTC` (directly observed via
