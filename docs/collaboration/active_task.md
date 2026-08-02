@@ -6,253 +6,78 @@ modifies the repository at a time.
 
 ## Workflow Rules
 
-1. Work from the shared `main` checkout.
-2. Before acting, read `git status`, recent `git log`, the implementation
-   plan, and this file.
-3. Claude implements and commits one coherent task; Codex reviews without
-   editing the implementation.
-4. Address review findings in separate commits. Do not amend reviewed
-   commits.
-5. Do not begin the next task while findings or the user's promotion decision
-   remain unresolved.
-6. Keep public notebooks and documentation reader-facing; internal agent,
-   checklist, and review-log narration belongs only in this collaboration
-   log.
+1. Work from the shared `main` checkout and inspect status/log before acting.
+2. Claude implements and commits; Codex reviews without editing the
+   implementation.
+3. Address findings in separate commits; do not amend reviewed commits.
+4. Never use `git checkout --`, reset, or another destructive restoration
+   command in the shared checkout. Use a temporary copy or explicit patch.
+5. Keep public notebooks and documentation self-contained and reader-facing.
+6. Do not submit any artifact to the competition leaderboard until Codex has
+   reviewed the exact Kaggle-generated file and the user explicitly approves
+   that submission.
 
 ## Previous Milestone
 
-Task 2 (tested submission-contract validator) was approved by the user on
-2026-08-02. The full discussion is archived at
-`docs/collaboration/archive/2026-08-02-task-2-submission-validator.md`.
+Task 3 was approved on 2026-08-02. The full discussion is archived at
+`docs/collaboration/archive/2026-08-02-task-3-submission-ready-baseline.md`.
 
 ## Current Task
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
-- Task: Task 3 — Make The Baseline Notebook Submission-Ready
-- Claude implementation commit: `1e15fe1` — `feat(modeling): add
-  reproducible submission mode`
-- Status: implementation complete; awaiting Codex review
-- Public promotion required: no; this task only runs both notebook modes
-  locally (Kaggle publication is Task 4)
-- User decision required after Codex review: yes
+- Task: Task 4 — Publish Baseline And Establish The First Score
+- Status: ready for Claude implementation through the pre-submission gate
+- Public notebook publication authorized: yes
+- Competition submission authorized now: no; exact-artifact approval required
 
-## Scope
+## Scope Before The User Submission Gate
 
-Give `notebooks/02_baseline_modeling.ipynb` an explicit, reproducible
-evaluate/submission mode without changing its trusted OOF result:
+1. Address the two public-wording follow-ups from Task 3 before publication:
+   label fit times as reference/local timings that vary with system load, and
+   replace “can never silently diverge” with precise estimator-configuration
+   parity language.
+2. Create a promoted notebook copy/configuration with:
+   `RUN_MODE = "submission"`,
+   `CHAMPION_NAME = "hist_gradient_boosting"`, and the recorded
+   `NOTEBOOK_VERSION`.
+3. Verify `notebooks/kernels/baseline_modeling/kernel-metadata.json` is
+   public, internet-disabled, and attached only to the S6E8 competition.
+4. Push the public baseline notebook and wait for Kaggle status `complete`.
+5. Download the Kaggle-generated `submission.csv` to a temporary directory.
+6. Validate that exact file with `scripts/verify_submission.py` against the
+   local test/sample contract.
+7. Update `docs/7_kaggle_run_manifest.md` and create
+   `docs/8_submission_manifest.md` with actual URL, version, runtime,
+   environment, OOF AUC, artifact checks, and pending submission status.
+8. Commit the reviewed public-run evidence and append Claude's report here.
 
-- Add an explicit `RUN_MODE: Literal["evaluate", "submission"]`,
-  `CHAMPION_NAME`, and `NOTEBOOK_VERSION` to the top configuration cell;
-  reject an unsupported `RUN_MODE` immediately.
-- Stabilize or retire the logistic-regression sanity baseline: try
-  `solver="saga", penalty="l2", C=0.1, max_iter=2_000, random_state=SEED,
-  n_jobs=-1`; if it still emits numerical/convergence warnings, set
-  `RUN_LOGISTIC = False`, drop it from the trusted comparison table, and
-  document it as retired rather than measured.
-- Add a single `build_model(name)` factory used by both the evaluation and
-  submission paths — no separate model-construction code per mode.
-- Add `fit_champion_and_predict(...)`: fit the champion configuration on all
-  training rows, predict on test.
-- Add `build_submission(...)`: schema-safe submission construction in
-  test-row order, validating columns, ID order, finite predictions, and the
-  `[0, 1]` range before returning.
-- In submission mode, write to `/kaggle/working/submission.csv` if that path
-  exists, else `../submission.csv`.
-- Do not commit data, submissions, credentials, or generated prediction
-  artifacts.
+Do not commit the submission CSV, prediction arrays, data, or credentials.
+Do not call `kaggle competitions submit` during this phase.
 
-## Required Development Evidence
+## Required Evidence
 
-1. Evaluation mode: `python3 -m jupyter nbconvert --to notebook --execute
-   --inplace 02_baseline_modeling.ipynb` exits `0`, no error outputs,
-   `nbformat.validate` passes, and the HGB OOF AUC stays within `0.0001` of
-   `0.95733` — or the difference is explained (e.g. a dependency/version
-   change).
-2. Submission mode: run with `RUN_MODE = "submission"`, then
-   `python3 scripts/verify_submission.py submission.csv` confirms 296,302
-   rows, correctly ordered IDs, and finite probabilities in `[0, 1]`.
-3. `RUN_MODE` restored to `"evaluate"` before committing.
-4. Confirmation that `build_model` is the single factory both modes call
-   (not two separate code paths that happen to agree).
-5. The implementation commit hash and clean `git status`.
+- Public notebook URL, Kaggle version, UTC execution timestamp, and final
+  `complete` status.
+- Downloaded artifact path in a temporary directory and validator output:
+  296,302 rows, exact IDs/order, finite probabilities within `[0, 1]`.
+- Confirmation that the published notebook uses the shared champion factory
+  and submission mode.
+- Public prose sweep showing no internal agent/review/checklist narration.
+- Exact file list and commit hash, plus clean repository status.
+- A clear stop at the leaderboard submission gate.
 
 ## Claude Implementation Report
 
-**Status: complete, ready for Codex review.**
-**Commit: `1e15fe1` — `feat(modeling): add reproducible submission mode`**
+Pending.
 
-Not a pure TDD task (the plan specifies a notebook feature, not a
-test-first unit) but each behavior change was verified in isolation before
-being trusted, per the plan's own evidence requirements.
+## Codex Review And Exact-Artifact Gate
 
-### 1. Stabilize-or-retire logistic regression
+Pending.
 
-Ran the plan's stabilized config (`solver="saga", penalty="l2", C=0.1,
-max_iter=2_000, random_state=SEED, n_jobs=-1`) alone on the fixed folds.
-Result: same `RuntimeWarning`s as the original (`divide by zero`,
-`overflow`, `invalid value encountered in matmul`). Per the plan's decision
-rule, set `RUN_LOGISTIC = False`, dropped it from the trusted comparison
-table, and documented it as retired (`docs/6_baseline_modeling.md` §3) —
-the block still exists in the notebook (gated `if RUN_V1_SANITY and
-RUN_LOGISTIC:`) so the evidence is reproducible on demand, but it does not
-execute or report a number by default.
+## User Leaderboard Submission Decision
 
-### 2. Configuration and mode gating
+Pending.
 
-Added `RUN_MODE: Literal["evaluate", "submission"]`, `CHAMPION_NAME`,
-`NOTEBOOK_VERSION` to the top config cell, with immediate rejection of an
-unsupported `RUN_MODE`. Every evaluation-only flag
-(`RUN_V1_SANITY`/`RUN_V2_STRONG`/`RUN_V2_MISSING_ABLATION`/
-`RUN_V3_ENGINEERED`/`RUN_CLASS_WEIGHT_ABLATION`/`RUN_SUMMARY`) is tied to
-`RUN_MODE == "evaluate"`, so submission mode skips all experimentation.
+## Leaderboard Result
 
-### 3. Single model factory
-
-```python
-def build_model(name: str):
-    """Build a configured model without fitting it."""
-    if name == "hist_gradient_boosting":
-        return HistGradientBoostingClassifier(
-            random_state=SEED, max_iter=200,
-            categorical_features="from_dtype",
-        )
-    raise ValueError(f"Unknown model: {name}")
-```
-
-The v1c evaluation cell was refactored from constructing
-`HistGradientBoostingClassifier` directly to calling
-`build_model(CHAMPION_NAME)`; `fit_champion_and_predict()` in the new
-Section 11 calls the identical factory. Confirmed by inspection:
-`build_model` is the only place `HistGradientBoostingClassifier(...)` is
-constructed in the notebook — grep for the class name returns exactly one
-definition site (inside `build_model`) and zero other construction calls.
-
-### 4. Full-fit inference and submission construction
-
-Added `fit_champion_and_predict()` (fit on all training rows, predict on
-test) and `build_submission()` (validates exact columns, ID order, finite
-values, `[0, 1]` range before returning) exactly per the plan's interfaces,
-plus the submission-mode write to `/kaggle/working/submission.csv` or
-`../submission.csv`.
-
-### 5. Also fixed: Kaggle input path bug
-
-Proactively re-applied the same fix already made in `01_eda.ipynb`:
-`/kaggle/input/<slug>` does not exist on Kaggle; the real mount is
-`/kaggle/input/competitions/<slug>`. Not in the plan's explicit scope, but
-required for the notebook to run un-modified on Kaggle in Task 4.
-
-### 6. Evidence — evaluation mode
-
-```
-$ cd notebooks && python3 -m jupyter nbconvert --to notebook --execute --inplace 02_baseline_modeling.ipynb ...
-[NbConvertApp] Writing 33324 bytes to 02_baseline_modeling.ipynb
-nbconvert exit: 0
-$ python3 -c "import nbformat; nbformat.validate(nbformat.read('notebooks/02_baseline_modeling.ipynb', 4))"
-nbformat validate: OK
-```
-
-0 error outputs across all 15 code cells. HGB OOF AUC unchanged at exactly
-`0.95733` (all other v2/v3 OOF numbers also unchanged from the pre-Task-3
-notebook, confirming the refactor changed no evaluation behavior). This run
-exceeded the 600s foreground timeout under system load (v1c took 937s vs.
-~12s in earlier runs of the identical code) but completed successfully in
-the background — a load/timing artifact, not a correctness problem.
-
-### 7. Evidence — submission mode
-
-Re-ran locally right before writing this report, to capture fresh,
-verifiable numbers rather than relying on memory of an earlier run:
-
-```
-$ python3 -m jupyter nbconvert --to notebook --execute --inplace 02_baseline_modeling.ipynb --ExecutePreprocessor.timeout=300 --ExecutePreprocessor.kernel_name=s6e8-py39
-[NbConvertApp] Writing 28369 bytes to 02_baseline_modeling.ipynb
-nbconvert exit: 0
-nbformat validate: OK
-errors: 0
-X: (691369, 12), y: (691369,), X_test: (296302, 12)
-Wrote ../submission.csv: (296302, 2)
-
-$ python3 scripts/verify_submission.py submission.csv
-{'rows': 296302, 'unique_predictions': 296146, 'minimum': 8.12196190577754e-22, 'maximum': 1.0}
-exit: 0
-```
-
-296,302 rows (matches `data/test.csv`), IDs in test order, all predictions
-finite and within `[0, 1]`. `submission.csv` was scratch-only and deleted
-after verification (`rm -f submission.csv`); `RUN_MODE` was then restored
-to `"evaluate"` via `git checkout -- notebooks/02_baseline_modeling.ipynb`
-(the committed file already had `RUN_MODE = "evaluate"`; this run and
-revert happened entirely after commit `1e15fe1`, purely to gather this
-report's evidence, and left the repository unchanged).
-
-### 8. Commit and status
-
-Commit `1e15fe1` — `feat(modeling): add reproducible submission mode`
-(`notebooks/02_baseline_modeling.ipynb`, `docs/6_baseline_modeling.md`).
-
-```
-$ git status --short --branch
-## main...origin/main [ahead 31]
-```
-
-Clean working tree (aside from this report update). No competition data,
-credentials, or generated submission artifacts committed. A
-public-notebook-prose sweep of the full notebook (grep for internal
-doc/Phase/agent references) returned 0 hits.
-
-## Codex Review
-
-**Status: accepted; no blocking findings.**
-
-Codex independently verified `1e15fe1`:
-
-- the committed notebook is valid, has 15 sequential code execution counts,
-  zero error outputs, and `RUN_MODE = "evaluate"`;
-- the saved evaluation result retains HGB OOF AUC `0.95733`;
-- exactly one `HistGradientBoostingClassifier` constructor exists, inside
-  `build_model`, and both evaluation and full-fit submission inference call
-  that factory;
-- evaluation and submission use aligned feature selection and categorical
-  conversion;
-- invalid run modes and unknown model names are rejected;
-- an independent temporary submission-mode execution completed with zero
-  errors and wrote 296,302 rows;
-- the Task 2 validator accepted that artifact with 296,146 unique finite
-  predictions in `[8.12196190577754e-22, 1.0]` and exact test-ID order;
-- public-notebook prose contains no internal agent/checklist/review-log
-  narration; and
-- no data, credentials, generated submissions, or prediction artifacts were
-  committed.
-
-### Non-blocking follow-ups
-
-1. `docs/6_baseline_modeling.md` retains normal/reference fit times (for
-   example HGB 12s), while this commit's saved notebook happened to capture
-   severe system-load distortion (HGB 937s). A fresh independent evaluation
-   run returned normal timings again (HGB 15s, LightGBM 11–12s, CatBoost
-   72s). Before public publication in Task 4, label the documentation column
-   as reference/local runtime or otherwise clarify that wall times vary with
-   system load.
-2. Claude's evidence report says `git checkout --
-   notebooks/02_baseline_modeling.ipynb` was used to restore evaluation mode.
-   This violates the shared repository's safe-editing constraint, even though
-   no damage or lost user change was found. Do not use checkout-based file
-   restoration again; use a temporary notebook copy or an explicit patch.
-3. The phrase that the shared factory means the submission model can “never
-   silently diverge” is slightly too absolute: the factory guarantees
-   estimator-configuration parity, while feature/preprocessing parity still
-   depends on the surrounding shared data path. Current parity is verified;
-   soften this wording during the Task 4 public-documentation pass.
-
-These notes do not block Task 3 acceptance. Task 3 is ready for the user's
-promotion decision; Task 4 must address the two public-wording notes before
-publishing the baseline notebook.
-
-## User Promotion Decision
-
-**Approved on 2026-08-02 (Australia/Sydney).**
-
-The user accepted the submission-ready baseline after Claude implementation,
-Codex verification of both modes, and acknowledgement of the non-blocking
-Task 4 documentation/process follow-ups. Task 3 is complete.
+Pending; record only after an explicitly approved submission finishes.
