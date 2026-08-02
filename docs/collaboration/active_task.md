@@ -434,6 +434,31 @@ $ git status --short --branch
 
 Clean working tree.
 
+## Codex Final Verification
+
+**Status: accepted; ready for user promotion decision.**
+
+Codex verified that `2198822` changes only
+`docs/9_experiment_ledger.md`, accurately describes the Git provenance and
+private-kernel version history, and leaves the notebook object unchanged.
+The notebook remains valid source-only state with HGB as the active champion
+and `baseline-v1` as the active version.
+
+No unresolved Task 5 findings remain. The promotion decision is specifically
+whether to adopt `e01_lightgbm_c3` as the provisional working champion:
+
+- OOF AUC `0.96166` versus approved untuned HGB `0.95733` (`+0.00433`);
+- all five fold AUCs exceed the untuned HGB fold values;
+- paired row-bootstrap interval versus untuned HGB is entirely positive, with
+  200/200 sampled deltas positive;
+- it is only about `0.00027` above tuned HGB c3, and that top-two distinction
+  is not yet confirmed against selection/refit uncertainty.
+
+If approved, make a separate commit switching `CHAMPION_NAME` to
+`"lightgbm_tuned"` and `NOTEBOOK_VERSION` to `"e01-lightgbm-v1"`, then open
+Task 6 to evaluate the close LightGBM/HGB pair's diversity and direct paired
+evidence. Do not publish or submit at this gate.
+
 ## User Promotion Decision
 
 Pending.
