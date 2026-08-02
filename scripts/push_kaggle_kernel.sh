@@ -6,7 +6,12 @@
 # `kaggle kernels push`. The copied .ipynb is gitignored and regenerated
 # every run, so notebooks/ never has two versions to keep in sync by hand.
 #
-# Usage: scripts/push_kaggle_kernel.sh <eda|baseline>
+# Usage: scripts/push_kaggle_kernel.sh <eda|baseline|experiments>
+#
+# "experiments" pushes the same notebooks/02_baseline_modeling.ipynb source
+# to a separate, private kernel (notebooks/kernels/experiments/) used for
+# GPU-backed tuning/search runs -- kept out of the public baseline kernel's
+# version history.
 
 set -euo pipefail
 
@@ -22,8 +27,12 @@ case "${1:-}" in
     NOTEBOOK="02_baseline_modeling.ipynb"
     KERNEL_DIR="$NOTEBOOKS_DIR/kernels/baseline_modeling"
     ;;
+  experiments)
+    NOTEBOOK="02_baseline_modeling.ipynb"
+    KERNEL_DIR="$NOTEBOOKS_DIR/kernels/experiments"
+    ;;
   *)
-    echo "Usage: $0 <eda|baseline>" >&2
+    echo "Usage: $0 <eda|baseline|experiments>" >&2
     exit 1
     ;;
 esac
