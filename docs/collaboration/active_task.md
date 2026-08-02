@@ -282,6 +282,98 @@ These fixes require a separate commit and Claude report. Do not begin Task 6,
 switch the approved champion, publish a public kernel, or submit to the
 leaderboard before Codex review and the user's promotion decision.
 
+## Claude Fix Report
+
+**Commit: `7cbee8d` — `fix(modeling): address Task 5 review findings,
+un-hardcode champion promotion`**
+
+Verified each finding against the code before fixing rather than applying
+them on trust. Addressing all 8 numbered items:
+
+**1. Single source of truth.** `build_model("lightgbm_tuned")` now does
+`LGBMClassifier(random_state=SEED, verbose=-1, **LGBM_CONFIGS[2])` —
+reads Section 9's own config list (index 2 = c3) instead of a duplicated
+literal dict. Verified with a standalone check before touching the
+notebook: `LGBM_CONFIGS[2]` resolves to
+`{'n_estimators': 400, 'learning_rate': 0.05, 'num_leaves': 63}` and fits
+without error.
+
+**2. Gate controls a recommendation, not the durable state.**
+`CHAMPION_NAME`/`NOTEBOOK_VERSION` reverted to the approved
+`hist_gradient_boosting`/`baseline-v1`. Added
+`MODEL_FIT_KWARGS`/`LIGHTGBM_FIT_KWARGS`/`fit_model()` so evaluation and
+submission share one fit-time-kwargs definition (LightGBM's
+`categorical_feature`, which must be passed at fit time, unlike HGB's
+constructor-level `categorical_features="from_dtype"`) instead of two
+separately-written calls. Added a fail-loud assertion:
+`E01_WINNER == E01_RECOMMENDED_CANDIDATE` — if the gate's computed winner
+ever disagreed with the documented/wired recommendation, the notebook
+raises instead of silently drifting. Verified passing (no `AssertionError`
+in the version-3 log).
+
+**3. Reran on the private Kaggle kernel.** Version 3, ~89 minutes, 0
+errors. No public kernel push, no leaderboard submission.
+
+**4. Fold AUCs.** Each candidate's 5 individual fold AUCs are now printed
+(previously only fold std was in the required-evidence table); recorded
+in full in `docs/9_experiment_ledger.md`.
+
+**5. Notebook output state.** Cleared all code cells' `outputs`/
+`execution_count` uniformly (`None`/`[]`) — supersedes the prior
+partial-restore approach, which mixed stale old outputs with unexecuted
+new cells. Confirmed via a scripted check: all code cells have
+`execution_count = None` and empty outputs; `nbformat.validate()` passes.
+
+**6. Ledger statistical framing.** Rewrote `docs/9_experiment_ledger.md`'s
+results section: `e01_lightgbm_c3` is now called a "provisional, working
+recommendation," with explicit disclosure that (a) it was selected as the
+arg-max on the same OOF data used for inference (selection-bias risk),
+(b) its margin over `e01_hgb_c3` is only `0.00027`, and (c) the paired
+bootstrap conditions on already-fitted fold predictions and excludes
+refit/CV-selection/multiple-comparison uncertainty. `P(delta > 0) = 1.00`
+is now reported as "200/200 resamples positive" throughout, including in
+the results table's column header.
+
+**7. CatBoost conclusion narrowed.** Now states CatBoost was weakest
+"within this specific bounded search" (these four configurations, this
+iteration/learning-rate range), explicitly noting tree structure/capacity/
+per-iteration cost were not held equal across families — not a general
+claim about CatBoost's ceiling.
+
+**8. Provenance and reader-facing ledger.** Removed the "see the Claude
+implementation report in `docs/collaboration/active_task.md`" reference
+from the ledger; the venue and reasoning are now explained directly and
+self-containedly in the ledger itself. Added the version-3 log's
+fingerprint (13,368 bytes, SHA-256
+`16d9a8b9afb58058895b770528f265a0c234a973898f1152218accdfe8b0fd01`) and
+observed completion time (`2026-08-02 10:39:12 UTC`, from direct status
+polling — noted that `kaggle kernels list -m`'s `lastRunTime` field
+returned a stale value for this kernel and was not used). Corrected the
+"predeclared criteria... written and committed before any candidate was
+run" claim: the hypothesis file was genuinely written first (a real,
+verifiable action I took), but since it was committed in the same commit
+as the implementation, git history alone cannot prove that ordering —
+the ledger no longer implies it can. Also fixed
+`scripts/push_kaggle_kernel.sh`'s stale "public kernel" header comment
+and removed a "GPU-backed" claim from it (GPU is available on the
+kernel; none of this project's model configurations request GPU
+computation).
+
+### Status and evidence
+
+```
+$ git log --oneline -1
+7cbee8d fix(modeling): address Task 5 review findings, un-hardcode champion promotion
+
+$ git status --short --branch
+## main...origin/main [ahead 51]
+```
+
+Clean working tree. `RUN_MODE = "evaluate"`, `CHAMPION_NAME =
+"hist_gradient_boosting"` confirmed in the committed notebook. No
+competition data, credentials, generated submission artifacts, or public
+kernel push occurred in this fix round.
+
 ## User Promotion Decision
 
 Pending.
