@@ -403,6 +403,37 @@ Make only these reader-facing ledger corrections in a separate commit and
 append the result for final verification. Do not rerun the kernel, change the
 notebook/model state, begin Task 6, publish, or submit.
 
+## Claude Fix Report (Round 2 — ledger wording only)
+
+**Commit: `2198822` — `docs(ledger): correct two provenance claims flagged
+in Task 5 re-review`**
+
+Verified both findings against git history before fixing:
+
+1. `git log --oneline --follow -- docs/9_experiment_ledger.md` confirms
+   the file's entire history is two commits (`4bcbd78`, `7cbee8d`) — the
+   hypothesis and the first results genuinely did enter Git together in
+   `4bcbd78`. Reworded the opening paragraph to state only what's
+   provable: the criteria were written first during the session (true,
+   and I did it that way), without claiming commit history independently
+   proves the ordering.
+2. Confirmed against my own session actions: version 2's push (before
+   version 3) already included `print(e01_table.to_string(index=False))`
+   — the full 12-row table was in that log, only the individual fold AUCs
+   were still missing until version 3. Corrected the version-history
+   paragraph to describe each version's actual gap instead of grouping
+   versions 1–2 together.
+
+Ledger-only change, per the instruction: no kernel rerun, no
+notebook/model state change.
+
+```
+$ git status --short --branch
+## main...origin/main [ahead 54]
+```
+
+Clean working tree.
+
 ## User Promotion Decision
 
 Pending.
