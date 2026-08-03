@@ -26,13 +26,16 @@ Working champion:
 - Config: 400 estimators, learning rate 0.05, 63 leaves, seed 42
 - OOF AUC: `0.96166`
 - Close tuned HGB candidate: `e01_hgb_c3`, OOF AUC `0.96139`
-- Difference: approximately `0.00027`, not yet directly confirmed
+- Difference: `0.00027` (OOF AUC gap); directly confirmed by E02's paired
+  bootstrap between the two candidates: mean delta `+0.000267`, 95%
+  interval `[0.000140, 0.000410]`, 200/200 resamples positive
 
 ## Current Task
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 6 — Conditional Diversity And Ensemble Pass
-- Status: ready for Claude implementation
+- Status: entry check complete (SKIP decision); fix round in progress for
+  Codex's requested corrections
 
 ## Entry Check — Must Run First
 
@@ -219,6 +222,71 @@ if “source-only” is intended to mean fully clean execution metadata.
   appended in `71ae1d5`.
 - Notebook JSON is valid, outputs/counts are cleared, diff checks pass, and
   the working tree was clean before this review-log edit.
+
+## Claude Fix Report
+
+**Commit: `969a71a` — `fix(modeling): address Task 6 entry-check review
+findings`**
+
+Verified each finding before fixing:
+
+1. **Fail-loud guard.** Confirmed the notebook had no branch for a future
+   `PROCEED` outcome. Added `if E02_PROCEED: raise NotImplementedError(...)`
+   naming the unimplemented follow-up (additional model family, blend-weight
+   sweep) so a changed rerun can't finish "successfully" having silently
+   skipped required work.
+2. **Shared champion path.** Confirmed the E02 LightGBM helper manually
+   reconstructed `LGBMClassifier(**LGBM_CONFIGS[2])` instead of calling the
+   `fit_model()` helper already built for exactly this in the Task 5 fix
+   round — a real miss on my part reusing my own established pattern.
+   Fixed to call `fit_model("lightgbm_tuned", X_tr, y_tr)` with an
+   `assert CHAMPION_NAME == "lightgbm_tuned"` guard.
+3. Added the bootstrap/selection/multiplicity limitations directly to
+   Section 10's insight cell (previously only in the ledger).
+4. Verified each claim against what I'd actually written before correcting:
+   confirmed "versions 2-4" was wrong (checked back through this session's
+   own history — version 2 only ever printed the 12-row table, not
+   individual fold AUCs) and fixed to "versions 3-4"; confirmed sklearn's
+   `HistGradientBoostingClassifier` grows leaf-wise/best-first (same family
+   as LightGBM, not level-wise as I'd written) and removed the claim
+   entirely rather than replace it with another unverified architectural
+   detail; reworded the "searching noise" line to state the no-blend
+   decision is the predeclared process gate, not a capability claim about
+   blending.
+5. Computed `both_right = 691,369 - (65,335 + 4,423 + 4,724) = 616,887`,
+   matching Codex's independently computed number, and added it to the
+   ledger's table with the reconciling arithmetic shown. Updated the
+   "Previous Milestone" and "Current Task" sections' stale text.
+6. Reworded Section 10's two markdown cells to drop "Task 6"/"Steps 2-5"
+   workflow-numbering language, describing the section as a model-diversity
+   check with the decision and champion state stated directly.
+
+**Non-blocking cleanup:** stripped `metadata.execution` timestamps from all
+20 code cells (confirmed via a scripted check — zero remain).
+
+**No rerun.** All three code changes are provably behavior-equivalent to
+what actually produced the version-4 evidence: `fit_model()` calls the
+identical construction/fit-kwargs the manual code used; `both_right` is
+arithmetic on already-verified counts; the fail-loud branch is dead code
+when the result is `SKIP`, as it was here. Documented this reasoning
+explicitly in the ledger rather than silently reusing old numbers without
+comment. Version 4 (15,303 bytes, SHA-256
+`f3cd078e5e58f76104b0f92e28e2befeec8ac84f89876077007dcf8544fab8ed`) remains
+the evidence of record.
+
+### Status and evidence
+
+```
+$ git log --oneline -1
+969a71a fix(modeling): address Task 6 entry-check review findings
+
+$ git status --short --branch
+## main...origin/main [ahead 63]
+```
+
+Clean working tree (aside from this report). No kernel rerun, no
+notebook/model state change beyond what's described above, no
+publication or submission.
 
 ## User Promotion Decision
 
