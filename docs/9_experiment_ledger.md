@@ -236,3 +236,92 @@ Pearson correlation is `< 0.995` **and** the error-set Jaccard overlap is
 `<= 0.90`. If either condition fails, stop here, retain `lightgbm_tuned`
 as champion, and record the skip decision with the full measured evidence
 — not a placeholder.
+
+## E02 — Entry Check Results
+
+Executed on the same private, GPU-enabled Kaggle experimentation kernel as
+E01 (`tuannm3812/smartphone-addiction-experiments-private`), version 4.
+This run also re-executed the full E01 search from scratch (`RUN_MODE =
+"evaluate"` runs everything); all 12 E01 candidates' numbers matched
+version 3 exactly, an incidental third-time reproducibility confirmation.
+
+- Kaggle kernel status: `complete`.
+- Downloaded log: 15,303 bytes, SHA-256
+  `f3cd078e5e58f76104b0f92e28e2befeec8ac84f89876077007dcf8544fab8ed`.
+- Zero `error`/`traceback` output (the only lines containing "error" are
+  this section's own `error_jaccard` variable name and its "Errors:"
+  print label, not a Python exception).
+- Every number below is copied directly from the kernel's `print()`
+  output.
+
+### Recreated OOF results (fresh names, same configs as Section 9)
+
+| Candidate | OOF AUC | Fold std | Runtime (s) | Fold AUCs |
+| --- | ---: | ---: | ---: | --- |
+| `e02_lightgbm_tuned` | 0.96166 | 0.00062 | 77 | [0.96069, 0.96151, 0.96203, 0.96257, 0.96153] |
+| `e02_hgb_c3` | 0.96139 | 0.00056 | 107 | [0.96071, 0.96100, 0.96196, 0.96215, 0.96115] |
+
+Both candidates' fold AUCs are identical to their `e01_*` counterparts
+from Section 9 (versions 2–4) — the refit is exactly reproducible.
+
+**Fold-by-fold delta (lightgbm − hgb):** `[-0.00002, +0.00050, +0.00007,
++0.00041, +0.00038]`. LightGBM is ahead on 4 of 5 folds; on fold 1 the two
+are effectively tied (HGB ahead by `0.00002`, well within noise).
+
+**Direct paired bootstrap (lightgbm vs. hgb, 200 resamples, 100,000
+sample size, seed 42):** mean delta `+0.000267`, 95% interval `[0.000140,
+0.000410]` (entirely positive), 200/200 resamples positive. This is a
+tighter, more direct statement of the ~`0.00027` gap already noted in
+E01 — the two candidates' own row-paired comparison, not each vs. the
+original v1c champion.
+
+### Correlation
+
+- **Pearson: `0.997563`** — above the predeclared `0.995` threshold.
+- Spearman (context only): `0.996440`.
+
+### Decile ranking disagreement
+
+- Top-decile overlap `0.8589` (disagreement `0.1411`).
+- Bottom-decile overlap `0.9548` (disagreement `0.0452`).
+
+The two models disagree more at the top of the ranking (where the
+positive class is concentrated) than at the bottom.
+
+### Error-set overlap (0.5 threshold)
+
+| | Count |
+| --- | ---: |
+| LightGBM total errors | 69,758 |
+| HGB total errors | 70,059 |
+| Both wrong | 65,335 |
+| Only LightGBM wrong | 4,423 |
+| Only HGB wrong | 4,724 |
+| **Jaccard overlap** | **0.8772** |
+
+`0.8772 <= 0.90` — the error-set condition is met: roughly 12% of the
+combined mistake set is not shared between the two models.
+
+### Entry decision
+
+**SKIP.** The predeclared rule requires both conditions; only one holds:
+
+- Pearson correlation `0.997563 < 0.995` → **False**.
+- Error-set Jaccard `0.8772 <= 0.90` → **True**.
+
+Because the correlation condition fails, Task 6 does not proceed to the
+conditional scope (Steps 2–5: XGBoost family, blend-weight sweep). This
+result is consistent with what the E01 numbers already suggested:
+LightGBM c3 and HGB c3 are both gradient-boosted tree ensembles trained
+on the same 12 features with similar leaf/iteration budgets, and their
+predictions track each other closely (99.76% Pearson correlation) even
+though the trees themselves are structurally different (leaf-wise vs.
+histogram-based level-wise growth). The models are accurate but not
+diverse enough, by the predeclared bar, to expect a convex blend to beat
+`lightgbm_tuned` outright — attempting the blend sweep anyway would
+mostly be searching noise.
+
+**Champion unchanged:** `lightgbm_tuned` (`CHAMPION_NAME`) remains the
+working champion. Task 7 ("Publish Champion") can proceed against this
+candidate once authorized; no further Task 6 work (XGBoost, blend sweep)
+is implemented.
