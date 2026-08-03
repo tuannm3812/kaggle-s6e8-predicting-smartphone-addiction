@@ -242,8 +242,10 @@ as champion, and record the skip decision with the full measured evidence
 Executed on the same private, GPU-enabled Kaggle experimentation kernel as
 E01 (`tuannm3812/smartphone-addiction-experiments-private`), version 4.
 This run also re-executed the full E01 search from scratch (`RUN_MODE =
-"evaluate"` runs everything); all 12 E01 candidates' numbers matched
-version 3 exactly, an incidental third-time reproducibility confirmation.
+"evaluate"` runs everything); all 12 E01 candidates' predictive/statistical
+metrics (OOF AUC, fold AUCs) matched version 3 exactly, an incidental
+third-time reproducibility confirmation. Runtimes differed run to run, as
+expected for wall-clock timings on shared infrastructure.
 
 - Kaggle kernel status: `complete`.
 - Downloaded log: 15,303 bytes, SHA-256
@@ -254,6 +256,21 @@ version 3 exactly, an incidental third-time reproducibility confirmation.
 - Every number below is copied directly from the kernel's `print()`
   output.
 
+**Post-review code changes, not rerun:** after this run, the LightGBM
+comparator was refactored to call the shared `fit_model("lightgbm_tuned",
+...)` path (with an assertion on `CHAMPION_NAME`) instead of manually
+reconstructing the same model, a `both_right` count was added to the
+error-set breakdown below, and a fail-loud guard was added for a future
+`PROCEED` outcome. None of these change the computation that actually ran
+here: `fit_model()` calls the identical `LGBMClassifier(random_state=SEED,
+verbose=-1, **LGBM_CONFIGS[2])` construction and the identical
+`categorical_feature` fit kwarg the manual code used; `both_right` is
+`691,369 - (both wrong + only-LightGBM wrong + only-HGB wrong)`, arithmetic
+on already-verified counts; and the fail-loud guard's branch never
+executes when the result is `SKIP`, as it was here. The version-4 numbers
+below remain the evidence of record — a rerun was judged unnecessary
+rather than skipped by default.
+
 ### Recreated OOF results (fresh names, same configs as Section 9)
 
 | Candidate | OOF AUC | Fold std | Runtime (s) | Fold AUCs |
@@ -262,7 +279,8 @@ version 3 exactly, an incidental third-time reproducibility confirmation.
 | `e02_hgb_c3` | 0.96139 | 0.00056 | 107 | [0.96071, 0.96100, 0.96196, 0.96215, 0.96115] |
 
 Both candidates' fold AUCs are identical to their `e01_*` counterparts
-from Section 9 (versions 2–4) — the refit is exactly reproducible.
+from Section 9 (versions 3–4, the only versions that printed individual
+fold AUCs) — the refit is exactly reproducible.
 
 **Fold-by-fold delta (lightgbm − hgb):** `[-0.00002, +0.00050, +0.00007,
 +0.00041, +0.00038]`. LightGBM is ahead on 4 of 5 folds; on fold 1 the two
@@ -297,7 +315,10 @@ positive class is concentrated) than at the bottom.
 | Both wrong | 65,335 |
 | Only LightGBM wrong | 4,423 |
 | Only HGB wrong | 4,724 |
+| Both right | 616,887 |
 | **Jaccard overlap** | **0.8772** |
+
+(`65,335 + 4,423 + 4,724 + 616,887 = 691,369`, the full row count.)
 
 `0.8772 <= 0.90` — the error-set condition is met: roughly 12% of the
 combined mistake set is not shared between the two models.
@@ -314,12 +335,11 @@ conditional scope (Steps 2–5: XGBoost family, blend-weight sweep). This
 result is consistent with what the E01 numbers already suggested:
 LightGBM c3 and HGB c3 are both gradient-boosted tree ensembles trained
 on the same 12 features with similar leaf/iteration budgets, and their
-predictions track each other closely (99.76% Pearson correlation) even
-though the trees themselves are structurally different (leaf-wise vs.
-histogram-based level-wise growth). The models are accurate but not
-diverse enough, by the predeclared bar, to expect a convex blend to beat
-`lightgbm_tuned` outright — attempting the blend sweep anyway would
-mostly be searching noise.
+predictions track each other closely (99.76% Pearson correlation). This
+is the predeclared time-budget/process gate acting as designed, not a
+claim that a convex blend of these two models could not improve AUC —
+that possibility is simply not tested here, since the predeclared bar for
+spending further budget on it was not cleared.
 
 **Champion unchanged:** `lightgbm_tuned` (`CHAMPION_NAME`) remains the
 working champion. Task 7 ("Publish Champion") can proceed against this
