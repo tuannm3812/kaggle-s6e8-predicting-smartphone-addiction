@@ -162,7 +162,63 @@ credentials, generated artifacts, or public/leaderboard action occurred.
 
 ## Codex Review
 
-Pending.
+**Status: changes requested.**
+
+The numerical entry decision is accepted: the version-4 log fingerprint and
+reported values reconcile, the metric implementations are correct, and
+`0.997563 < 0.995` is false while `0.8772 <= 0.90` is true. Therefore `SKIP`
+follows from the predeclared AND gate. The following corrections are required
+before Task 6 approval:
+
+1. **Fail loudly while the conditional branch is absent.** The notebook only
+   prints `PROCEED` if `E02_PROCEED` becomes true. Add a guard that fails with
+   an actionable message when the gate passes until the XGBoost/blend branch
+   is implemented; otherwise a changed rerun can finish successfully with an
+   unfulfilled workflow.
+2. **Use the shared champion construction path.** The E02 LightGBM helper
+   manually reconstructs the model. Route it through the existing champion
+   factory/fit path and assert the expected champion identity so future
+   factory or `CHAMPION_NAME` changes cannot silently make this comparison
+   stale.
+3. **Add the required E02 limitations.** State explicitly that the 200-sample
+   percentile bootstrap conditions on these fixed OOF fits and does not cover
+   fold/seed/refit uncertainty; the pair was selected after E01 on the same
+   OOF dataset; and the interval is neither independent confirmation nor a
+   multiplicity-corrected test. A clear reference to E01's fuller caveat is
+   acceptable.
+4. **Correct evidence and interpretation claims.** Narrow “all numbers matched
+   exactly” to predictive/statistical metrics because runtimes differ. Do not
+   claim version-2 fold values were directly verified when version 2 did not
+   print them. Frame the no-blend decision as the predeclared budget/process
+   gate, not proof that a convex blend cannot improve AUC or would only search
+   noise. Remove the inaccurate contrast describing sklearn HGB as
+   level-wise; both implementations use histogram methods and sklearn HGB
+   grows by best-first gain.
+5. **Complete and reconcile the record.** Report the predeclared `both right`
+   cell (`616,887`), update the stale current-task status and “not yet directly
+   confirmed” milestone text, and distinguish the added review commit in the
+   implementation report's commit list.
+6. **Polish notebook prose for eventual public readers.** Replace internal
+   “Task 6,” “Steps 2–5,” and follow-up orchestration language in Section 10
+   with a reader-facing model-diversity check. State the measured Pearson,
+   Jaccard, SKIP decision, and retained champion directly. Internal workflow
+   detail belongs in this collaboration log.
+
+Non-blocking cleanup: all output arrays and execution counts are cleared, but
+most code cells retain `metadata.execution` timestamps. Strip those timestamps
+if “source-only” is intended to mean fully clean execution metadata.
+
+### Independent verification
+
+- Private Kaggle kernel status: `complete`.
+- Log: 15,303 bytes; SHA-256
+  `f3cd078e5e58f76104b0f92e28e2befeec8ac84f89876077007dcf8544fab8ed`.
+- E02 AUCs, fold values/deltas, bootstrap, correlations, decile overlaps,
+  error counts, Jaccard, and decision match the downloaded log.
+- Hypothesis/rule and code were committed in `f5a81c8` before results were
+  appended in `71ae1d5`.
+- Notebook JSON is valid, outputs/counts are cleared, diff checks pass, and
+  the working tree was clean before this review-log edit.
 
 ## User Promotion Decision
 
