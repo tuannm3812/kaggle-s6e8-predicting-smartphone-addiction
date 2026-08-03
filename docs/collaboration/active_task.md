@@ -76,7 +76,89 @@ If the entry condition fails, do not run XGBoost or a blend sweep.
 
 ## Claude Implementation Report
 
-Pending.
+**Status: complete — entry check ran, result is SKIP. Conditional scope
+(Steps 2–5: XGBoost, blend sweep) not implemented, per the plan's own
+entry-condition gate.**
+**Commits: `f5a81c8` (hypothesis + code, before any run), `71ae1d5`
+(results)**
+
+### Entry check implementation
+
+Added Section 10 to `notebooks/02_baseline_modeling.ipynb`: recreates
+`e02_lightgbm_tuned` and `e02_hgb_c3` (same `LGBM_CONFIGS[2]`/
+`HGB_CONFIGS[2]` dictionaries Section 9 uses — not duplicated literals)
+under fresh names, then reports fold-by-fold deltas, a direct paired
+bootstrap between the two candidates themselves, Pearson and Spearman
+correlation, top/bottom-decile ranking disagreement, and a 0.5-threshold
+error-set Jaccard overlap. `docs/9_experiment_ledger.md`'s E02 section
+predeclares the recreation method, which correlation metric the `0.995`
+threshold applies to, and a concrete operationalization of "meaningful
+complementary residuals" (error-set Jaccard `<= 0.90`) — the plan itself
+does not give a numeric definition for that term, so I defined one before
+running rather than judging it post-hoc.
+
+**Provenance fix applied proactively:** committed the hypothesis and code
+(`f5a81c8`) *before* pushing to Kaggle, and the results (`71ae1d5`) in a
+separate commit afterward — directly addressing the same class of finding
+Codex raised in Task 5's re-review (there, the E01 hypothesis and first
+results entered git in the same commit, so ordering wasn't provable from
+history alone). This time it genuinely is.
+
+### Run and evidence
+
+Pushed to the same private Kaggle kernel (version 4). This run also
+re-executed the full E01 search from scratch (`RUN_MODE = "evaluate"`
+runs everything unconditionally), so it took ~80 minutes like versions
+1–3; all 12 E01 candidates' numbers matched version 3 exactly — an
+incidental third-time reproducibility confirmation, not something I set
+out to re-verify.
+
+- Kaggle kernel status: `complete`, 0 errors.
+- Log: 15,303 bytes, SHA-256
+  `f3cd078e5e58f76104b0f92e28e2befeec8ac84f89876077007dcf8544fab8ed`.
+- Both `e02_*` candidates' fold AUCs are byte-identical to their `e01_*`
+  counterparts from prior versions.
+
+### Results
+
+- Direct paired bootstrap (lightgbm vs. hgb): mean delta `+0.000267`,
+  95% interval `[0.000140, 0.000410]` (entirely positive), 200/200
+  resamples positive.
+- Pearson correlation `0.997563` — **fails** the `< 0.995` threshold.
+- Error-set Jaccard overlap `0.8772` — **passes** the `<= 0.90` threshold.
+- Fold-by-fold: LightGBM ahead on 4/5 folds; fold 1 is a near-tie (HGB
+  ahead by `0.00002`).
+
+### Entry decision: SKIP
+
+Both predeclared conditions are required; only one holds. The correlation
+condition fails (`0.9976` is not `< 0.995`), so per the plan's own entry
+gate, Task 6 does not proceed to XGBoost evaluation or the blend-weight
+sweep. Full reasoning and all measured numbers are in
+`docs/9_experiment_ledger.md`'s "E02 — Entry Check Results" section — not
+just this summary.
+
+**Champion unchanged:** `lightgbm_tuned` remains `CHAMPION_NAME`. No
+notebook/model state changed in this task; the only notebook changes are
+the new Section 10 (entry check) and the resulting renumbering of
+Sections 10–12 to 11–13, plus one cross-reference fix.
+
+### Status and evidence
+
+```
+$ git log --oneline -2
+71ae1d5 docs(ledger): record Task 6 entry check (E02) results — SKIP decision
+f5a81c8 feat(modeling): add Task 6 entry check (E02) hypothesis and code
+
+$ git status --short --branch
+## main...origin/main [ahead 60]
+```
+
+Clean working tree. `RUN_MODE = "evaluate"`, `CHAMPION_NAME =
+"lightgbm_tuned"` unchanged. All code cells have `execution_count = None`
+and empty outputs locally (no local re-execution occurred; Kaggle is the
+sole execution venue, per the established pattern). No competition data,
+credentials, generated artifacts, or public/leaderboard action occurred.
 
 ## Codex Review
 
