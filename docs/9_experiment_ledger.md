@@ -186,3 +186,53 @@ displayed precision).
   correlation is between top *candidates* (e.g. `e01_lightgbm_c3` vs.
   `e01_hgb_c3`), not between a candidate and the original champion, and
   computing it is Task 6's own entry-condition check.
+
+## E02 — Entry Check (Champion vs. Tuned HGB Diversity)
+
+Since a Task 5 candidate (`e01_lightgbm_c3`) does beat the prior champion,
+Task 6's other entry path applies: proceed to the conditional diversity
+scope only if the working champion (`lightgbm_tuned`) and the closest
+challenger (`e01_hgb_c3`) have prediction correlation below `0.995` **and**
+meaningful complementary residuals. This section predeclares exactly how
+both halves of that condition are measured, before recreating the OOF
+predictions or looking at any result.
+
+**Recreation method:** refit both models independently in a new notebook
+section, using `LGBM_CONFIGS[2]` and `HGB_CONFIGS[2]` (the same
+dictionaries Section 9 used — not duplicated literals) through
+`run_cv()` on the same seeded folds, under new result names
+(`e02_lightgbm_tuned`, `e02_hgb_c3`) distinct from Section 9's `e01_*`
+entries. This both supplies fresh OOF arrays for this section and is an
+independent reproducibility check on Section 9's numbers.
+
+**Correlation metric:** Pearson correlation of the two OOF probability
+arrays (`numpy.corrcoef`), matching the metric already used throughout
+this ledger. Spearman rank correlation (`pandas.Series.corr(method=
+"spearman")`) is also reported for context but the predeclared `0.995`
+threshold applies to Pearson, per the plan's wording.
+
+**Complementary-residual operationalization (predeclared, since the plan
+does not give a numeric threshold):**
+
+1. **Decile ranking disagreement:** rank all 691,369 OOF predictions by
+   probability for each model separately; take the top 10% and bottom 10%
+   by rank for each. Disagreement = `1 - (overlap size / decile size)`
+   between the two models' top-decile row sets, and separately for the
+   bottom-decile row sets.
+2. **Error-set overlap:** classify each row as wrong if
+   `(prediction >= 0.5) != y_true`, independently for each model. Compute
+   the 2x2 breakdown (both wrong, only-champion wrong, only-challenger
+   wrong, both right) and the Jaccard overlap of the two error sets
+   (`both wrong / union of both models' wrong sets`).
+3. **"Meaningful" complementarity is defined as:** the error-set Jaccard
+   overlap is at most `0.90` — i.e., at least 10% of the combined set of
+   mistakes the two models make is *not* shared between them. This is a
+   concrete, predeclared operationalization of "meaningful," not a
+   post-hoc judgment call.
+
+**Entry decision rule (predeclared):** proceed to Task 6's conditional
+scope (Steps 2–5: XGBoost family, blend sweep) only if **both** the
+Pearson correlation is `< 0.995` **and** the error-set Jaccard overlap is
+`<= 0.90`. If either condition fails, stop here, retain `lightgbm_tuned`
+as champion, and record the skip decision with the full measured evidence
+— not a placeholder.
