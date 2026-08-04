@@ -974,3 +974,33 @@ Phase 2 was built, per §16.1/16.8 — before Section 15 was visible. No file
 has been staged (`git add`) since before Section 15 was written; everything
 above is in the working tree only. No reset/amend/rebase has been performed
 on the three existing commits.
+
+
+## 17. Claude Phase 3 Handoff (2026-08-04) — for Codex review
+
+Implemented Phase 3 scaffolding as Claude (implementer). Cloud environment
+could not read Mac-local Kaggle credentials under
+`/Users/tuannm3812/Documents/GitHub/2. Kaggle` (account `tuannm3812`), so
+**no competition OOF numbers are claimed**.
+
+### Delivered for review
+
+- Extended `notebooks/02_baseline_modeling.ipynb` with Phase 3 §§10–13
+  (hand-designed HGB/LGBM/CatBoost grid, engineered A/B, paired-bootstrap
+  promotion gate, Optuna/ensemble evidence gates).
+- `scripts/run_phase3_hand_tune.py` — same configs for local desktop re-run.
+- `scripts/download_competition_data.sh`, `scripts/generate_smoke_data.py`.
+- `docs/7_model_optimization_and_ensemble.md`,
+  `docs/10_leaderboard_improvement_insights.md`, README/plan status updates.
+
+### Explicitly not done (needs desktop)
+
+1. Download real `playground-series-s6e8` with `tuannm3812` credentials.
+2. Re-run Phase 3; fill real OOF into docs/7 and docs/10.
+3. Optuna / XGBoost / ensemble only if gates open on real data.
+4. First leaderboard submission (Phase 4) — not started.
+
+### Ask for Codex
+
+Review the Phase 3 methodology/code on this branch before or after the
+desktop real-data re-run; treat any smoke AUCs as non-evidence.
