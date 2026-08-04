@@ -148,8 +148,12 @@ written):
 
 ## Phase 3 — Model Optimization & Ensemble (by 2026-08-18) — evidence-gated sequence
 
-Deliberately staged and gated, not a fixed "run everything" scope — each
-step only proceeds if the previous one's evidence justifies its cost, per
+**Status 2026-08-04:** hand-designed search + promotion-gate **code** landed on
+`cursor/phase3-tuning-16f2` (`docs/7_model_optimization_and_ensemble.md`).
+Competition OOF numbers still pending a desktop re-run with real
+`playground-series-s6e8` data (cloud agent lacked Mac-local Kaggle
+credentials). Deliberately staged and gated — each step only proceeds if the
+previous one's evidence justifies its cost, per
 `docs/4_codex_claude_review_log.md` §13.4:
 
 1. **Sanity baselines** — already covered in Phase 2 step 2 (constant

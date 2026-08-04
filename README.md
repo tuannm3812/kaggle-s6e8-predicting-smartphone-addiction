@@ -13,17 +13,16 @@ validation checks, leaderboard submissions, and next-step strategy.
 
 ## Status
 
-Planning, EDA, and baseline modeling complete (2026-08-01); Phase 3
-(tuning/ensemble) not yet started. Deadline: **2026-08-31 23:59 UTC**.
-Evaluation metric confirmed as ROC AUC. Current best OOF AUC: **0.9573**
-(untuned `HistGradientBoostingClassifier` — see
-`docs/6_baseline_modeling.md` for why this isn't yet a model-family
-verdict). See `docs/2_implementation_plan.md` for the full phased plan,
-`docs/1_instructions.md` for competition facts, `docs/3_eda_insights.md` for
-EDA findings, and `docs/5_source_dataset_provenance.md` for the likely
-source-dataset investigation. `docs/4_codex_claude_review_log.md` records
-the Codex/Claude collaborative review that shaped the EDA methodology and
-Phase 3 scope.
+Planning, EDA, and baseline modeling complete (2026-08-01). Phase 3
+hand-designed tuning is **scaffolded** on branch `cursor/phase3-tuning-16f2`
+(`docs/7_model_optimization_and_ensemble.md`) and needs a **local re-run on
+real competition data** before any promotion decision. Deadline:
+**2026-08-31 23:59 UTC**. Evaluation metric confirmed as ROC AUC. Current
+best *competition* OOF AUC: **0.9573** (untuned
+`HistGradientBoostingClassifier` — see `docs/6_baseline_modeling.md`). See
+`docs/2_implementation_plan.md` for the phased plan,
+`docs/4_codex_claude_review_log.md` for the Codex/Claude review, and
+`docs/10_leaderboard_improvement_insights.md` for the experiment ledger.
 
 ## Repository Structure
 
