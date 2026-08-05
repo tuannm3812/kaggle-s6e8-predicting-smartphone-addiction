@@ -1,4 +1,4 @@
-# Claude–Codex Active Task Log
+# Cursor–Claude–Codex Active Task Log
 
 This file is the shared handoff and review channel for the current task.
 Only one agent modifies the repository at a time.
@@ -6,14 +6,37 @@ Only one agent modifies the repository at a time.
 ## Workflow Rules
 
 1. Work from shared `main`; inspect status/log first.
-2. Claude implements and commits; Codex independently reviews.
+2. **Roles (effective 2026-08-05):** Cursor implements and commits.
+   Claude reviews independently, then Codex reviews independently. Both
+   review passes must be addressed before the user makes a promotion
+   decision. (Tasks 1–6 above this line were implemented by Claude under
+   the prior arrangement — Claude was implementer, Codex was sole
+   reviewer. That history stands as-is; only new work follows the roles
+   above.)
 3. Use separate fix commits; never amend reviewed commits or use destructive
    checkout/reset restoration.
 4. Keep the canonical notebook source-only until a trusted public run.
 5. Keep generated OOF arrays, predictions, submissions, data, logs, and
    credentials uncommitted.
 6. Private Kaggle experimentation is allowed; public publication and
-   leaderboard submission are not authorized in this task.
+   leaderboard submission are not authorized without an explicit user
+   go-ahead for that specific artifact.
+7. Do not begin the next task while a prior task's review or the user's
+   promotion decision remains unresolved.
+
+## Branch Note (2026-08-05)
+
+A separate branch, `cursor/phase3-tuning-16f2`, contains independent prior
+work by Cursor with its own "Phase 1/2/3" structure and doc set
+(`docs/4_codex_claude_review_log.md`, `docs/7_model_optimization_and_
+ensemble.md`, `docs/10_leaderboard_improvement_insights.md`), diverged from
+this line of work on 2026-08-01. It is **not merged and not in use** —
+`main` (this file's branch) is the authoritative line of work going
+forward. That branch's uncommitted changes are preserved in a git stash on
+that branch (not on `main`), untouched. Cursor should work from `main` and
+this file for all new tasks; do not pull work from
+`cursor/phase3-tuning-16f2` without an explicit user decision to reconcile
+the two histories.
 
 ## Previous Milestone
 
@@ -34,8 +57,80 @@ Working champion:
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 6 — Conditional Diversity And Ensemble Pass
-- Status: entry check complete (SKIP decision); fix round in progress for
-  Codex's requested corrections
+- Status: entry check complete (SKIP decision); Codex's requested fix round
+  is implemented and committed (`969a71a`, `4774e8f`, both pushed to
+  `origin/main`). **Awaiting Codex's re-review of the fix round, then the
+  user's promotion decision on the SKIP outcome.** No new implementation
+  work remains on Task 6 — this is a pure review/decision gate.
+
+## Queued Next Task (Cursor): Task 7 — Publish Champion And Close The Project
+
+**Blocked until Task 6 closes** (Codex re-review + user promotion decision
+above). Do not start this until that gate clears. Recorded here now so
+Cursor can start immediately once it does, without waiting on another
+round-trip.
+
+- Plan reference: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`,
+  "Task 7: Publish Champion And Close The Project."
+- Champion to publish: whatever Task 6 closes with. If the SKIP decision is
+  accepted as-is (the expected outcome, since Task 6 found no qualifying
+  diverse challenger), that is `lightgbm_tuned` — `LGBMClassifier
+  (n_estimators=400, learning_rate=0.05, num_leaves=63, random_state=42)`,
+  OOF AUC `0.96166`. Confirm the final `CHAMPION_NAME` value in this file's
+  "Previous Milestone" / Task 6 sections before starting, in case the
+  user's decision differs from this default.
+
+**Files:** Modify `notebooks/02_baseline_modeling.ipynb`,
+`docs/7_kaggle_run_manifest.md`, `docs/8_submission_manifest.md`; create
+`docs/10_final_lessons.md` (note: this is a *different* file from the
+`docs/10_leaderboard_improvement_insights.md` that exists only on the
+unrelated `cursor/phase3-tuning-16f2` branch — do not confuse the two);
+modify `README.md`.
+
+**Steps (from the plan, verbatim):**
+
+1. Freeze the champion configuration: set `CHAMPION_NAME`, exact
+   parameters, `RUN_MODE = "submission"`, seed, and `NOTEBOOK_VERSION` in
+   one configuration cell. Disable rejected experiment blocks without
+   deleting their documented results.
+2. Run locally and validate: execute the notebook, validate notebook
+   JSON, run `scripts/verify_submission.py submission.csv`. All checks
+   must pass.
+3. Push and rerun publicly: push the baseline kernel (the *public* one,
+   `scripts/push_kaggle_kernel.sh baseline` — not the private
+   `experiments` kernel used for Tasks 5–6), wait for completion,
+   download its output, run the independent validator against the
+   Kaggle-generated artifact.
+4. Submit the exact reviewed artifact only after the user explicitly
+   authorizes that specific submission. Record its notebook URL/version
+   and public score in both manifests immediately.
+5. Write `docs/10_final_lessons.md`: final OOF and public scores;
+   accepted and rejected hypotheses; local/Kaggle reproducibility
+   findings; limitations and private-leaderboard risks; explicit reason
+   further experiments were stopped (the Task 6 SKIP rationale).
+6. Update `README.md`: `Current Result`, `What Worked`, `Final Modeling
+   Decision`, public notebook links, documentation map. Exact metrics
+   only, no unverified rank claims.
+7. Final verification:
+   ```bash
+   pytest tests/test_verify_submission.py -v
+   python3 -c "import nbformat; [nbformat.validate(nbformat.read(p, 4)) for p in ['notebooks/01_eda.ipynb', 'notebooks/02_baseline_modeling.ipynb']]"
+   git diff --check
+   git status --short
+   ```
+   Expected: tests pass, notebooks validate, no whitespace errors, only
+   intended final documentation/notebook changes remain.
+8. Commit, append an implementation report to this file (below the
+   existing sections — do not overwrite Task 6's record), and stop for
+   Claude's review, then Codex's, then the user's final approval.
+   ```bash
+   git add README.md notebooks/02_baseline_modeling.ipynb docs/7_kaggle_run_manifest.md docs/8_submission_manifest.md docs/10_final_lessons.md
+   git commit -m "docs(project): freeze final S6E8 champion"
+   ```
+
+**Do not** submit to the competition leaderboard without the user's
+explicit go-ahead on the exact artifact (workflow rule 6) — steps 1–3 and
+5–7 do not require that authorization; step 4 does.
 
 ## Entry Check — Must Run First
 
