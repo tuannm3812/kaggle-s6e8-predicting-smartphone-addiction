@@ -235,3 +235,101 @@ $ git status --short --branch
 
 No competition leaderboard action occurred. Generated `submission.csv` and
 Kaggle download copies were not committed.
+
+## Claude Review
+
+**Status: changes requested (one moderate item); everything else
+independently verified and accepted.**
+
+I did not take the report's numbers on trust — verified each claim
+against the live artifacts myself before writing this up.
+
+### Independently verified (all match exactly)
+
+- `kaggle kernels status tuannm3812/smartphone-addiction-baseline-modeling`
+  → `COMPLETE`; `lastRunTime` `2026-08-05 14:06:21.933 UTC`, matching the
+  report exactly.
+- Downloaded the kernel's own log and artifact fresh (not reusing
+  Cursor's copies): log 2,572 bytes, SHA-256 `1858c9eabb63d51a73444dfa
+  4721aa63fde31d02374d912ac1dbbfe4484f6078`; artifact 7,752,126 bytes,
+  SHA-256 `1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6
+  f859b3` — both identical to the report's numbers.
+- `scripts/verify_submission.py` on that exact downloaded file:
+  `{'rows': 296302, 'unique_predictions': 296301, 'minimum':
+  0.0007421959289977, 'maximum': 0.9999985296600056}` — identical to the
+  report.
+- Kernel log contains no `error`/`traceback`; contains the expected
+  provenance line `NOTEBOOK_VERSION=e01-lightgbm-v1
+  CHAMPION_NAME=lightgbm_tuned SEED=42`.
+- **Reproducibility claim, independently reproduced, not just re-read:**
+  ran `RUN_MODE = "submission"` locally myself and diffed row-by-row
+  against the Kaggle-downloaded file. Max abs diff `3.638811474360182e-12`
+  — matches the report's "~3.6e-12" to full precision. (Local run and
+  restore used an explicit patch/content-write afterward, not `git
+  checkout`, per workflow rule 3; working tree confirmed byte-identical
+  to `HEAD` afterward.)
+- Notebook: `CHAMPION_NAME = "lightgbm_tuned"`, `NOTEBOOK_VERSION =
+  "e01-lightgbm-v1"`, `SEED = 42`, `RUN_MODE = "evaluate"` as committed;
+  `build_model`/`fit_model` unchanged from the reviewed Task 5/6 versions;
+  the new submission-mode provenance `print()` is correctly placed and
+  matches the log. `nbformat.validate` passes; all code cells
+  `execution_count = None` with empty outputs (source-only, as claimed).
+- `notebooks/kernels/baseline_modeling/kernel-metadata.json` unchanged:
+  still public, internet-disabled, attached only to this competition.
+- No leaderboard submission occurred (step 4 correctly stopped for
+  authorization); no data/credentials/generated artifacts committed;
+  `docs/8_submission_manifest.md` correctly withholds a public AUC for
+  the unsubmitted v2 artifact rather than inventing one.
+
+### Required fix
+
+1. **Dangling section reference in `docs/7_kaggle_run_manifest.md`.** The
+   new table row and `docs/8_submission_manifest.md`'s pending-artifact
+   note both point to a section titled "Champion Submission-Mode Run
+   (Task 7)" — that section does not exist in the file. Only the old v1
+   (`Baseline Submission-Mode Run`, HGB) write-up is present. Add the
+   matching v2 section (same structure as the v1 one: Push / Execution
+   log / Environment / Artifact validation / Champion factory
+   confirmation), including the log and artifact byte-size/SHA-256 pairs
+   and the local-vs-Kaggle reproducibility comparison — this evidence
+   currently exists only in this collaboration log, not in the
+   public-facing manifest it's supposed to live in.
+
+### Non-blocking
+
+2. **JSON re-serialization side effect.** Whatever tool wrote this
+   commit's notebook re-serialized every cell's `source` field from a
+   single string to a list-of-lines, and separately, every non-ASCII
+   character (em dashes throughout the notebook's prose) got written out
+   as a six-character backslash-u JSON escape sequence instead of the
+   literal UTF-8 character. Not a correctness bug (`nbformat.validate`
+   passes, and JSON decodes the escape back to the identical character on
+   read), but it's the same `ensure_ascii=True`-by-default mistake I
+   caught in my own work in Task 4 (`json.dump` without
+   `ensure_ascii=False`) — it makes every future diff on this file
+   noisier than it needs to be, touching cells that weren't semantically
+   changed. Worth fixing at the tool level so it doesn't keep recurring
+   on every future touch.
+3. **`docs/10_final_lessons.md` says "~1e-12"** for the reproducibility
+   gap; the actual measured value (confirmed twice now, by Cursor and
+   independently by me) is `3.6e-12` — same order of magnitude, worth
+   tightening to the precise figure now that it's pinned down.
+4. **README's new "Documentation Map" entry links straight to
+   `docs/collaboration/`** (the internal Cursor/Claude/Codex review log
+   and its archive), which is new in this commit, not pre-existing. This
+   is a judgment call, not a rule violation — flagging for the user to
+   decide: keep it for portfolio transparency into the review process, or
+   drop it to keep the public README focused on the technical narrative
+   only.
+
+### Not re-litigated
+
+Step 1's "disable rejected experiment blocks without deleting their
+documented results" is satisfied by the existing `RUN_MODE`-gated flags
+(no new blocks needed disabling) — no finding there.
+
+Item 1 should go in a separate fix commit per workflow rule 3. Items 2–4
+are the user's/Cursor's call on priority; none of them block Codex's
+review from starting in parallel if preferred, but I'd suggest fixing
+item 1 first since it's the only one that's an actual factual gap in a
+public-facing document.
