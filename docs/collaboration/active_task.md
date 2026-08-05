@@ -57,17 +57,16 @@ Working champion:
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 6 — Conditional Diversity And Ensemble Pass
-- Status: entry check complete (SKIP decision); Codex's requested fix round
-  is implemented and committed (`969a71a`, `4774e8f`, both pushed to
-  `origin/main`). **Awaiting Codex's re-review of the fix round, then the
-  user's promotion decision on the SKIP outcome.** No new implementation
-  work remains on Task 6 — this is a pure review/decision gate.
+- Status: entry check complete (SKIP decision); fix round re-reviewed and
+  **accepted** (see Cursor-as-Codex re-review below, 2026-08-05). **Awaiting
+  the user's promotion decision on the SKIP outcome** to close Task 6 and
+  unblock Task 7. No new implementation work remains on Task 6.
 
 ## Queued Next Task (Cursor): Task 7 — Publish Champion And Close The Project
 
-**Blocked until Task 6 closes** (Codex re-review + user promotion decision
-above). Do not start this until that gate clears. Recorded here now so
-Cursor can start immediately once it does, without waiting on another
+**Blocked until Task 6 closes** (user promotion decision above; fix-round
+re-review is done). Do not start this until that gate clears. Recorded here
+now so Cursor can start immediately once it does, without waiting on another
 round-trip.
 
 - Plan reference: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`,
@@ -383,6 +382,68 @@ Clean working tree (aside from this report). No kernel rerun, no
 notebook/model state change beyond what's described above, no
 publication or submission.
 
+
+## Cursor Re-Review (substituting for Codex, 2026-08-05)
+
+**Status: accepted; ready for user promotion decision.**
+
+Reviewed the Task 6 fix round (`969a71a` code/ledger + `4774e8f` fix report)
+against the six required findings from the prior Codex review. Independent
+checks were against the current `main` notebook and
+`docs/9_experiment_ledger.md`, not only the fix-report narrative.
+
+### Finding-by-finding
+
+1. **Fail-loud on PROCEED** — **fixed.** After the decision print,
+   `if E02_PROCEED: raise NotImplementedError(...)` names the missing
+   follow-up (additional family + blend-weight sweep). On the recorded SKIP
+   outcome this branch is dead; a future true PROCEED cannot complete
+   silently.
+2. **Shared champion path** — **fixed.** `fit_predict_e02_lightgbm` calls
+   `fit_model("lightgbm_tuned", ...)` with
+   `assert CHAMPION_NAME == "lightgbm_tuned"`. `build_model("lightgbm_tuned")`
+   uses `LGBM_CONFIGS[2]` and `MODEL_FIT_KWARGS` — same construction as the
+   pre-fix manual path. (HGB remains an explicit `HGB_CONFIGS[2]`
+   constructor; that was not required by the prior review.)
+3. **E02 limitations in notebook** — **fixed.** Section 10 insight cell
+   states fixed-OOF conditioning, post-E01 selection on the same OOF data,
+   and non-independence / non-multiplicity-corrected status, with a pointer
+   to Section 9. Matching caveats also appear as comments above the
+   bootstrap call.
+4. **Evidence / interpretation claims** — **fixed.** Ledger now says
+   predictive/statistical metrics matched versions 3–4 (runtimes may
+   differ); version-2 fold claim removed; sklearn HGB “level-wise” claim
+   gone from notebook and ledger; no-blend framed as the predeclared
+   process/time-budget gate, not a capability claim about blending.
+5. **Record reconciliation** — **fixed.** `both_right = 616,887` is in the
+   ledger table with the reconciling sum to 691,369; notebook prints
+   `both_right` in the error-set line. Previous-milestone / status wording
+   in this file was updated in the fix round; commit list distinguishes
+   implementation vs review/fix commits.
+6. **Reader-facing Section 10 prose** — **fixed.** Notebook Section 10 title
+   and body describe a model-diversity check; no “Task 6” / “Steps 2–5”
+   orchestration language remains in notebook cells (verified by search).
+
+**Non-blocking cleanup:** `metadata.execution` timestamps are absent on all
+code cells; outputs/execution counts cleared; `nbformat.validate` passes.
+
+### Numerical SKIP (unchanged, still accepted)
+
+Version-4 evidence of record stands: Pearson `0.997563` fails `< 0.995`;
+Jaccard `0.8772` passes `<= 0.90`; AND-gate → **SKIP**; champion remains
+`lightgbm_tuned` (OOF `0.96166`). No rerun was required for the
+behavior-equivalent post-review edits; the ledger’s equivalence note is
+accepted.
+
+### Residual notes (non-blocking)
+
+- Fix report said “20 code cells”; current notebook has 22 code cells.
+  Cleanup criterion (zero `metadata.execution`) still holds.
+- Closing Task 6 still requires the **user’s promotion decision** below.
+  Task 7 stays blocked until that is recorded.
+
+No further Task 6 implementation is requested.
+
 ## User Promotion Decision
 
-Pending.
+Pending — accept Task 6 SKIP and retain `lightgbm_tuned` (or record a different decision) to close Task 6.
