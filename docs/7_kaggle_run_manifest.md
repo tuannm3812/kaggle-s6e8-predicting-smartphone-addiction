@@ -6,7 +6,8 @@ provisional values.
 | Notebook | Public URL | Kaggle Version | Status | Runtime | Local Comparison | UTC Execution Date |
 | --- | --- | --- | --- | --- | --- | --- |
 | `01_eda.ipynb` | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda | 7 | `complete` | ~166s (11.0s–176.6s per kernel log timestamps) | All retrievable printed outputs were compared. Computed findings match except for the documented 0.0001 A/C differences; runtime package versions differ as documented below. | 2026-08-01 14:01:19.273 UTC (`lastRunTime`, `kaggle kernels list -m`) |
-| `02_baseline_modeling.ipynb` (`RUN_MODE = "submission"`) | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling | 1 | `complete` | ~31s total (data load 18.9s; fit + predict + write 12.5s, per kernel log timestamps) | Downloaded artifact validated with `scripts/verify_submission.py`; see §"Baseline Submission-Mode Run" below. | 2026-08-02 04:10:56.897 UTC (`lastRunTime`, `kaggle kernels list -m`) |
+| `02_baseline_modeling.ipynb` (`RUN_MODE = "submission"`, HGB `baseline-v1`) | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling | 1 | `complete` | ~31s total (data load 18.9s; fit + predict + write 12.5s, per kernel log timestamps) | Downloaded artifact validated with `scripts/verify_submission.py`; see §"Baseline Submission-Mode Run" below. | 2026-08-02 04:10:56.897 UTC (`lastRunTime`, `kaggle kernels list -m`) |
+| `02_baseline_modeling.ipynb` (`RUN_MODE = "submission"`, `lightgbm_tuned` / `e01-lightgbm-v1`) | https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling | 2 | `complete` | ~44s to write (data load ~20s; fit+predict+write ~23s, per kernel log timestamps) | Downloaded artifact validated with `scripts/verify_submission.py`; see §"Champion Submission-Mode Run (Task 7)" below. | 2026-08-05 14:06:21.933 UTC (`lastRunTime`, `kaggle kernels list -m`) |
 
 ## Version History
 

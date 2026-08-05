@@ -1,50 +1,70 @@
 # Predicting Smartphone Addiction
 
 [![Kaggle Competition](https://img.shields.io/badge/Kaggle-Playground%20Series%20S6E8-20BEFF?logo=kaggle&logoColor=white)](https://www.kaggle.com/competitions/playground-series-s6e8)
-[![Modeling Phase](https://img.shields.io/badge/Modeling%20Phase-Baseline%20Complete-blue)](docs/2_implementation_plan.md)
+[![Modeling Phase](https://img.shields.io/badge/Modeling%20Phase-Champion%20Frozen-blue)](docs/10_final_lessons.md)
 [![Python](https://img.shields.io/badge/Python-3-3776AB?logo=python&logoColor=white)](requirements.txt)
 
-Kaggle Playground Series S6E8 project for predicting smartphone addiction:
+Kaggle Playground Series S6E8 — predict smartphone addiction (ROC AUC):
 https://www.kaggle.com/competitions/playground-series-s6e8
 
-This repository uses a public-notebook-first Kaggle workflow. The notebooks
-generate reproducible outputs, while `docs/` records the modeling rationale,
-validation checks, leaderboard submissions, and next-step strategy.
+Public-notebook-first workflow: notebooks are executable sources of truth;
+`docs/` records rationale, validation, and submission evidence.
 
-## Status
+## Current Result
 
-Planning, EDA, and baseline modeling complete (2026-08-01); Phase 3
-(tuning/ensemble) not yet started. Deadline: **2026-08-31 23:59 UTC**.
-Evaluation metric confirmed as ROC AUC. Current best OOF AUC: **0.9573**
-(untuned `HistGradientBoostingClassifier` — see
-`docs/6_baseline_modeling.md` for why this isn't yet a model-family
-verdict). See `docs/2_implementation_plan.md` for the full phased plan,
-`docs/1_instructions.md` for competition facts, `docs/3_eda_insights.md` for
-EDA findings, and `docs/5_source_dataset_provenance.md` for the likely
-source-dataset investigation. `docs/archive/4_codex_claude_review_log.md` records
-the Codex/Claude collaborative review that shaped the EDA methodology and
-Phase 3 scope.
+| Item | Value |
+| --- | --- |
+| Working champion | `lightgbm_tuned` (`e01_lightgbm_c3`) |
+| Config | `LGBMClassifier(n_estimators=400, learning_rate=0.05, num_leaves=63, random_state=42)` |
+| OOF AUC | **0.96166** (5-fold stratified, seed 42) |
+| First public baseline (HGB) | Public AUC **0.95865** (OOF 0.95733) |
+| Champion public AUC | Pending user authorization of public kernel v2 artifact |
+
+Deadline: **2026-08-31 23:59 UTC**. Exact metrics only — no unverified rank claims.
+
+## Final Modeling Decision
+
+Promote tuned LightGBM over the untuned HGB floor after comparable hand-designed
+search with a paired-bootstrap promotion gate (`docs/9_experiment_ledger.md`).
+Stop further diversity/ensemble work after Task 6: champion vs tuned HGB
+Pearson correlation `0.997563` failed the predeclared `< 0.995` entry bar
+(SKIP). Details: `docs/10_final_lessons.md`.
+
+## What Worked
+
+- Fixed folds + aligned OOF for every comparable model.
+- Budget-aligned HGB / LightGBM / CatBoost grid (E01) instead of mismatched
+  “strong model” defaults.
+- Paired bootstrap + fold-consistency gate before champion changes.
+- Private GPU kernel for search; public kernel for milestone submission-mode
+  artifacts with log fingerprints and `scripts/verify_submission.py`.
+- Explicit diversity entry check before spending budget on blends.
+
+## Public Notebooks
+
+- [EDA](https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda)
+- [Baseline modeling](https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling)
+  (v1 HGB submitted; v2 `lightgbm_tuned` validated, submit pending)
 
 ## Repository Structure
 
-- `docs/`: competition notes, EDA findings, modeling decisions, submission
-  manifest, and next-step strategy.
-- `notebooks/`: executable Kaggle/local notebooks, plus `notebooks/kernels/`
-  holding each notebook's Kaggle push config.
-- `scripts/`: `push_kaggle_kernel.sh <eda|baseline>`, a one-command wrapper
-  around `kaggle kernels push` for each notebook.
-- `data/`: local competition files, intentionally ignored.
-- `predictions/`: OOF/test prediction matrices, intentionally ignored.
-- `scratch/`: temporary helper scripts and automation, intentionally ignored.
+- `docs/`: competition notes, EDA, modeling decisions, manifests, lessons.
+- `notebooks/`: sources of truth, plus `notebooks/kernels/` push metadata.
+- `scripts/`: `push_kaggle_kernel.sh <eda|baseline|experiments>`,
+  `verify_submission.py`, provenance helpers.
+- `data/`, `predictions/`, `scratch/`: local / generated, gitignored.
 
 ## Documentation Map
 
-- [`docs/0_coding_standards.md`](docs/0_coding_standards.md): project-specific
-  standards on top of the shared baseline.
-- [`docs/1_instructions.md`](docs/1_instructions.md): official task, metric,
-  files, and deadline.
-- [`docs/2_implementation_plan.md`](docs/2_implementation_plan.md): the
-  phased day-1 plan from EDA through final submission.
-
-Further docs (`3_eda_insights.md` onward) are created as each phase produces
-results — see the table at the end of `docs/2_implementation_plan.md`.
+- [`docs/0_coding_standards.md`](docs/0_coding_standards.md) — project standards
+- [`docs/1_instructions.md`](docs/1_instructions.md) — competition facts
+- [`docs/2_implementation_plan.md`](docs/2_implementation_plan.md) — phased plan
+- [`docs/3_eda_insights.md`](docs/3_eda_insights.md) — EDA findings
+- [`docs/5_source_dataset_provenance.md`](docs/5_source_dataset_provenance.md) — source data
+- [`docs/6_baseline_modeling.md`](docs/6_baseline_modeling.md) — early baselines
+- [`docs/7_kaggle_run_manifest.md`](docs/7_kaggle_run_manifest.md) — Kaggle run evidence
+- [`docs/8_submission_manifest.md`](docs/8_submission_manifest.md) — leaderboard rows
+- [`docs/9_experiment_ledger.md`](docs/9_experiment_ledger.md) — E01/E02 ledger
+- [`docs/10_final_lessons.md`](docs/10_final_lessons.md) — closeout narrative
+- [`docs/collaboration/`](docs/collaboration/) — active task + archives
+- [`docs/archive/4_codex_claude_review_log.md`](docs/archive/4_codex_claude_review_log.md) — early review log
