@@ -56,7 +56,7 @@ Working champion (unchanged by Task 6 SKIP):
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 7 — Publish Champion And Close The Project
-- Status: **open for Cursor implementation**
+- Status: **implementation complete; awaiting Claude review, then Codex review, then user decision on leaderboard submit (step 4)**
 - Implementer: Cursor (Claude then Codex review after the implementation report)
 - Public promotion / leaderboard submission: **not** authorized until the
   user explicitly approves the exact public artifact (workflow rule 6;
@@ -122,4 +122,116 @@ authorization; step 4 does.
 
 ## Cursor Implementation Report
 
-Pending.
+**Status: complete through steps 1–3 and 5–8. Step 4 (leaderboard submit)
+stopped for explicit user authorization of the exact Kaggle artifact.**
+**Commit: `6fee4cf` — `docs(project): freeze final S6E8 champion`**
+
+### Step 1 — Freeze champion configuration
+
+In `notebooks/02_baseline_modeling.ipynb` config cell:
+
+- `CHAMPION_NAME = "lightgbm_tuned"`
+- `NOTEBOOK_VERSION = "e01-lightgbm-v1"` (Task 7 freeze comment)
+- `SEED = 42`
+- Rejected logistic block remains `RUN_LOGISTIC = False`; other experiment
+  blocks stay gated by `RUN_MODE == "evaluate"` and therefore skip in
+  submission mode.
+
+For the public push and local validation, `RUN_MODE` was set to
+`"submission"`. After the successful public run, the committed notebook
+restores `RUN_MODE = "evaluate"` (same pattern as Task 4 / HGB baseline-v1)
+while leaving champion identity frozen. Added a submission-mode provenance
+`print` of `NOTEBOOK_VERSION`, `CHAMPION_NAME`, and `SEED` for the Kaggle log.
+
+### Step 2 — Local run and validate
+
+Executed the notebook in-process with `nbclient` (cwd `notebooks/`,
+submission mode). Wrote `../submission.csv` (gitignored).
+
+```
+$ python3 scripts/verify_submission.py submission.csv
+{'rows': 296302, 'unique_predictions': 296301, 'minimum': 0.0007421959289977, 'maximum': 0.9999985296600056}
+```
+
+Notebook JSON remained source-only locally (outputs cleared; not written
+back from the executor). `nbformat.validate` passed.
+
+### Step 3 — Public baseline kernel push
+
+```
+$ bash scripts/push_kaggle_kernel.sh baseline
+Kernel version 2 successfully pushed.
+```
+
+URL: https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling  
+Status: `COMPLETE`. Log stdout:
+
+```
+X: (691369, 12), y: (691369,), X_test: (296302, 12)
+Fold determinism verified: identical splits across independent calls.
+NOTEBOOK_VERSION=e01-lightgbm-v1 CHAMPION_NAME=lightgbm_tuned SEED=42
+Wrote /kaggle/working/submission.csv: (296302, 2)
+```
+
+Log: 2,572 bytes; SHA-256
+`1858c9eabb63d51a73444dfa4721aa63fde31d02374d912ac1dbbfe4484f6078`.  
+`lastRunTime`: 2026-08-05 14:06:21.933 UTC.
+
+Downloaded artifact validated:
+
+```
+$ python3 scripts/verify_submission.py <kaggle-submission.csv>
+{'rows': 296302, 'unique_predictions': 296301, 'minimum': 0.0007421959289977, 'maximum': 0.9999985296600056}
+```
+
+Kaggle artifact: 7,752,126 bytes; SHA-256
+`1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6f859b3`.  
+Local vs Kaggle predictions: max abs diff ≈ `3.6e-12` (not byte-identical
+CSV; validator summary fields match). Evidence of record for any future
+submit is the **Kaggle-downloaded** file.
+
+### Step 4 — Leaderboard submit
+
+**Not done.** Per workflow rule 6 / user instruction: do not submit without
+asking. Exact artifact awaiting authorization:
+
+- Public notebook version **2**
+- SHA-256 `1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6f859b3`
+- Candidate `lightgbm_tuned` / `e01-lightgbm-v1`, OOF AUC `0.96166`
+
+### Steps 5–6 — Docs
+
+- Created `docs/10_final_lessons.md` (scores, accepted/rejected, Task 6 SKIP
+  stop rationale, reproducibility, limitations).
+- Updated `docs/7_kaggle_run_manifest.md` with the champion v2 run section.
+- Updated `docs/8_submission_manifest.md` with a pending-artifact note (no
+  public AUC invented).
+- Updated `README.md` (Current Result, What Worked, Final Modeling Decision,
+  public links, documentation map).
+
+### Step 7 — Final verification
+
+```
+$ python3 -m pytest tests/test_verify_submission.py -v
+7 passed
+$ python3 -c "import nbformat; ..."
+nbformat OK
+$ git diff --check
+(clean)
+```
+
+### Step 8 — Commit and stop
+
+Committed as `6fee4cf`. Stopping for Claude review, then Codex review, then
+the user's decision on whether to submit the exact v2 artifact above.
+
+```
+$ git log --oneline -1
+6fee4cf docs(project): freeze final S6E8 champion
+
+$ git status --short --branch
+## main...origin/main [ahead 1]
+```
+
+No competition leaderboard action occurred. Generated `submission.csv` and
+Kaggle download copies were not committed.
