@@ -504,3 +504,95 @@ evidence checks, honest correction on the submit mechanism, and a clean
 hand-off. **No further Task 7 implementation is required from Cursor.**
 
 Ready for the user's formal Task 7 closeout / promotion decision.
+
+## Claude Exploration Report — E03 Feature Representation (2026-08-07)
+
+**Status: complete. Real, evidenced improvement found — not yet
+promoted, not published, not submitted. This is separate from Task 7,
+which remains ready for closeout regardless of this section's outcome.**
+
+**Commits: `e9d32a7` (E03 hypothesis + code, before any run), `2730977`
+(results)**
+
+### Why this exists
+
+The user asked me to review a higher-scoring public competitor notebook
+for this competition (`redamountassir/s6e8-histgradientboosting-lb-
+0-96945`, public AUC `0.96945` vs. our `0.96286`) and try adopting what's
+transferable. I pulled the actual notebook via `kaggle kernels pull`
+(not just its title) and read the full code. Its edge is feature
+representation — per-exact-value target encoding of all 12 columns,
+frequency encoding, and a domain-constraint-based imputation — not a
+different model or extra search budget on the same features our own
+E01/E02 search already varied.
+
+Before writing any code, I verified the competitor's stated constraint
+(`daily_screen_time_hours >= social_media_hours + gaming_hours +
+work_study_hours`) directly against our own `data/train.csv`/`test.csv`:
+zero violations in 421,427 / 182,287 complete rows respectively — real,
+checkable structure in our own data, not assumed from their write-up.
+
+### What I built (E03, `docs/9_experiment_ledger.md`)
+
+Three additive configurations, all on the champion's exact
+`LGBM_CONFIGS[2]` hyperparameters (isolating feature effect from a second
+tuning round):
+
+1. Constrained imputation + rate features not already in the base set.
+2. + frequency encoding of all 12 raw columns.
+3. + leak-free per-exact-value target encoding (`sklearn.preprocessing.
+   TargetEncoder(cv=5, ...)`, refit inside each of the 5 outer folds).
+
+Predeclared the hypothesis, the verified constraint, and the exact same
+promotion-gate structure E01 used (≥3/5 folds, entirely positive paired
+95% interval, `probability_positive ≥ 0.95`) in the ledger *before*
+running anything. Smoke-tested locally on a 5,000-row sample first to
+catch code bugs cheaply before spending Kaggle compute. Ran on the
+private experimentation kernel (version 8) — no public kernel push, no
+leaderboard action, consistent with every prior search round.
+
+### Result
+
+| Config | OOF AUC | vs. champion (`0.96166`) | Gate |
+| --- | ---: | ---: | --- |
+| Constrained imputation only | 0.96173 | +0.00007 | **fails** (interval crosses zero, `P=0.815`) |
+| + frequency encoding | 0.96396 | +0.00230 | **clears** (5/5 folds, 200/200 resamples) |
+| + target encoding | **0.96653** | **+0.00487** | **clears decisively** (tightest interval, lowest fold std) |
+
+Every fold improves monotonically across the three configs — not one
+lucky split. Fold std also drops monotonically (`0.00063 → 0.00058 →
+0.00046`): the winning config is both higher-scoring and more stable.
+Champion and E02 numbers reproduced exactly in this same run (third
+independent confirmation of `0.96166`).
+
+**Recommendation: `e03_plus_target_encoding`.** Constrained imputation
+*alone* is not distinguishable from the champion — the gain is real but
+comes from frequency + target encoding, not the imputation idea by
+itself. Full caveats (selection bias across the three configs, no new
+hyperparameter search layered in, OOF-vs-public isn't apples-to-apples)
+are in the ledger, not glossed over.
+
+### What this is not
+
+**Not promoted, not published, not submitted.** `CHAMPION_NAME` is
+unchanged (`lightgbm_tuned`). This needs the same review path as every
+prior candidate before anyone acts on it: Cursor and/or Codex review,
+then your decision on whether to actually promote it — at which point it
+would need a fresh champion-freeze cycle (Task-7-style: local validate,
+public kernel push, artifact review, your explicit submit authorization)
+before touching the leaderboard. I did not shortcut any of that.
+
+### Status and evidence
+
+```
+$ git log --oneline -2
+2730977 docs(ledger): record E03 results — target encoding clears the gate (+0.00487 OOF)
+e9d32a7 feat(modeling): add E03 feature-representation exploration (hypothesis+code)
+
+$ git status --short --branch
+## main...origin/main
+```
+
+Clean, pushed. Notebook remains source-only (`execution_count = null`,
+empty outputs on all code cells); `RUN_MODE = "evaluate"`,
+`CHAMPION_NAME = "lightgbm_tuned"` unchanged throughout.
