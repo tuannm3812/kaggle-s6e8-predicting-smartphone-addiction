@@ -11,7 +11,7 @@ score → GBDT tuning → diversity SKIP). Authoritative collaboration history:
 | Champion OOF AUC | **0.96166** | Private experiments kernel (E01/E02); `docs/9_experiment_ledger.md` |
 | Champion config | `lightgbm_tuned` = LGBM c3 (`n_estimators=400`, `learning_rate=0.05`, `num_leaves=63`, `random_state=42`) | `build_model("lightgbm_tuned")` / `LGBM_CONFIGS[2]` |
 | Prior public HGB baseline | OOF 0.95733 → public **0.95865** | Public baseline kernel v1; `docs/8_submission_manifest.md` |
-| Champion public AUC | **pending** | Public baseline kernel **v2** artifact validated; not submitted pending user authorization (`docs/7_kaggle_run_manifest.md`) |
+| Champion public AUC | **0.96286** | Public baseline kernel v2 artifact submitted 2026-08-06 (`docs/8_submission_manifest.md`) |
 
 ## Accepted Hypotheses
 
@@ -53,7 +53,7 @@ work after the diversity SKIP.
   artifact SHA recorded and submitted.
 - LightGBM champion public v2: validator summary fields match local
   (`rows=296302`, `unique_predictions=296301`, same min/max); predictions
-  agree within ~1e-12 abs; CSV SHA differs across environments (float
+  agree within max abs diff ≈ `3.6e-12`; CSV SHA differs across environments (float
   formatting / library builds). Evidence of record for submit is the
   **Kaggle-downloaded** file SHA
   `1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6f859b3`.
@@ -70,12 +70,12 @@ work after the diversity SKIP.
   float differences are expected.
 - Private LB overfitting risk remains if future work chased public scores;
   this project stopped when the diversity gate failed, not when public
-  score plateaus were measured for the champion (champion not yet submitted).
+  score plateaus were measured beyond the single authorized champion submit.
 
 ## Public Notebooks
 
 - EDA: https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda
 - Baseline / champion modeling:
   https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling
-  (v1 = HGB baseline submit; v2 = `lightgbm_tuned` artifact, awaiting submit
-  authorization)
+  (v1 = HGB baseline submit; v2 = `lightgbm_tuned` champion submit, public
+  AUC 0.96286)

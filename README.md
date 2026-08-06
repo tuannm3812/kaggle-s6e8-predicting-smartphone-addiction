@@ -18,7 +18,7 @@ Public-notebook-first workflow: notebooks are executable sources of truth;
 | Config | `LGBMClassifier(n_estimators=400, learning_rate=0.05, num_leaves=63, random_state=42)` |
 | OOF AUC | **0.96166** (5-fold stratified, seed 42) |
 | First public baseline (HGB) | Public AUC **0.95865** (OOF 0.95733) |
-| Champion public AUC | Pending user authorization of public kernel v2 artifact |
+| Champion public AUC | **0.96286** (submitted 2026-08-06 from public kernel v2) |
 
 Deadline: **2026-08-31 23:59 UTC**. Exact metrics only — no unverified rank claims.
 
@@ -44,7 +44,7 @@ Pearson correlation `0.997563` failed the predeclared `< 0.995` entry bar
 
 - [EDA](https://www.kaggle.com/code/tuannm3812/smartphone-addiction-eda)
 - [Baseline modeling](https://www.kaggle.com/code/tuannm3812/smartphone-addiction-baseline-modeling)
-  (v1 HGB submitted; v2 `lightgbm_tuned` validated, submit pending)
+  (v1 HGB public 0.95865; v2 `lightgbm_tuned` public **0.96286**)
 
 ## Repository Structure
 

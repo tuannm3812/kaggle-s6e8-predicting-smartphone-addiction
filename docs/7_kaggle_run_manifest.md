@@ -172,3 +172,70 @@ uses — no separate Kaggle-only model-construction code exists.
 The exact artifact above was submitted after explicit approval. Kaggle
 completed scoring with public ROC AUC `0.95865`; the submission and decision
 are recorded in `docs/8_submission_manifest.md`.
+
+
+## Champion Submission-Mode Run (Task 7)
+
+Trusted OOF for `lightgbm_tuned` remains the private-kernel E01/E02 evidence
+in `docs/9_experiment_ledger.md` (OOF AUC `0.96166`). `RUN_MODE =
+"submission"` skips evaluation by design — this public run proves the frozen
+champion fits and predicts cleanly on Kaggle and produces a valid artifact.
+
+**Push.** Public notebook pushed with `RUN_MODE = "submission"`,
+`CHAMPION_NAME = "lightgbm_tuned"`, `NOTEBOOK_VERSION = "e01-lightgbm-v1"`,
+`SEED = 42` via `scripts/push_kaggle_kernel.sh baseline` (kernel version
+**2**). The repository's committed copy restores `RUN_MODE = "evaluate"`
+after the push (same pattern as the HGB baseline-v1 run), keeping
+`CHAMPION_NAME` / `NOTEBOOK_VERSION` frozen to the Task 6–approved champion.
+
+**Execution log.** No `error` / `traceback` / `PapermillExecutionError` in
+the version-2 kernel log. Full stdout:
+
+```
+X: (691369, 12), y: (691369,), X_test: (296302, 12)
+Fold determinism verified: identical splits across independent calls.
+NOTEBOOK_VERSION=e01-lightgbm-v1 CHAMPION_NAME=lightgbm_tuned SEED=42
+Wrote /kaggle/working/submission.csv: (296302, 2)
+```
+
+Log: 2,572 bytes; SHA-256
+`1858c9eabb63d51a73444dfa4721aa63fde31d02374d912ac1dbbfe4484f6078`.
+Timestamps: data-load print ~19.7s; write completed ~43.6s on the
+GPU-enabled public runtime.
+
+**Environment.** Same public, internet-disabled, GPU-enabled configuration
+as `notebooks/kernels/baseline_modeling/kernel-metadata.json`. Submission
+mode does not print a package-version summary; do not assume library
+versions match the EDA trusted-version table above.
+
+**Artifact validation.** Downloaded via `kaggle kernels output` to a
+temporary directory (not committed), then:
+
+```
+$ python3 scripts/verify_submission.py <kaggle-submission.csv>
+{'rows': 296302, 'unique_predictions': 296301, 'minimum': 0.0007421959289977, 'maximum': 0.9999985296600056}
+exit: 0
+```
+
+An independent local `RUN_MODE = "submission"` run of the same frozen
+config produced identical validator summary fields (`rows`,
+`unique_predictions`, `minimum`, `maximum`). Predictions agree within
+floating-point noise (max abs diff ≈ `3.6e-12`, independently reproduced
+in Claude's Task 7 review); CSV byte hashes differ across environments
+because of float formatting / LightGBM builds — not a schema or ID-order
+mismatch. IDs match `data/test.csv` order.
+
+| Property | Kaggle v2 value |
+| --- | --- |
+| Bytes | 7,752,126 |
+| SHA-256 | `1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6f859b3` |
+
+**Champion factory confirmation.** Submission path calls
+`fit_champion_and_predict(CHAMPION_NAME, ...)` → `fit_model` /
+`build_model("lightgbm_tuned")` → `LGBM_CONFIGS[2]`
+(`n_estimators=400`, `learning_rate=0.05`, `num_leaves=63`) with shared
+`categorical_feature` fit kwargs — same factory as evaluate mode.
+
+**Leaderboard submission.** Submitted 2026-08-06 01:53:26.370 UTC after
+explicit user authorization of this exact artifact. Kaggle public ROC AUC
+**0.96286**. Recorded in `docs/8_submission_manifest.md`.

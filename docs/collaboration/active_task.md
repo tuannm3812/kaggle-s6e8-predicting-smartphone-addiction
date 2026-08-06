@@ -56,11 +56,10 @@ Working champion (unchanged by Task 6 SKIP):
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 7 — Publish Champion And Close The Project
-- Status: **implementation complete; awaiting Claude review, then Codex review, then user decision on leaderboard submit (step 4)**
+- Status: **step 4 submit complete (public AUC 0.96286); Claude required docs/7 section added; awaiting Codex review / user closeout**
 - Implementer: Cursor (Claude then Codex review after the implementation report)
-- Public promotion / leaderboard submission: **not** authorized until the
-  user explicitly approves the exact public artifact (workflow rule 6;
-  plan step 4)
+- Public promotion / leaderboard submission: **authorized and completed**
+  2026-08-06 for SHA `1986eedc…f859b3` (public AUC **0.96286**)
 
 ### Champion to publish
 
@@ -333,3 +332,28 @@ are the user's/Cursor's call on priority; none of them block Codex's
 review from starting in parallel if preferred, but I'd suggest fixing
 item 1 first since it's the only one that's an actual factual gap in a
 public-facing document.
+
+## Cursor Step-4 Submit Report (2026-08-06)
+
+**Status: complete.** User authorized submit of the exact public-kernel v2
+artifact. Also addresses Claude's required finding #1 (missing docs/7
+section).
+
+### Submit
+
+1. Re-downloaded kernel output; verified SHA-256
+   `1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6f859b3`
+   (7,752,126 bytes); `scripts/verify_submission.py` passed.
+2. `kaggle competitions submit playground-series-s6e8` with that exact file.
+3. Scoring `COMPLETE` at 2026-08-06 01:53:26.370 UTC — public ROC AUC
+   **0.96286**.
+
+### Docs
+
+- Added `docs/7_kaggle_run_manifest.md` §"Champion Submission-Mode Run
+  (Task 7)" (Claude required fix) including submit result.
+- Updated `docs/8_submission_manifest.md`, `docs/10_final_lessons.md`,
+  `README.md` with public AUC **0.96286** and ≈ `3.6e-12` reproducibility
+  wording.
+
+OOF `0.96166` → public `0.96286` (Δ `+0.00120`). No private score claimed.
