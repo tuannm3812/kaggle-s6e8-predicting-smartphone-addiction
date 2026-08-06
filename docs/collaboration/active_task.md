@@ -56,7 +56,7 @@ Working champion (unchanged by Task 6 SKIP):
 
 - Plan: `docs/superpowers/plans/2026-08-01-s6e8-implementation-plan.md`
 - Task: Task 7 — Publish Champion And Close The Project
-- Status: **step 4 submit complete (public AUC 0.96286); Claude required docs/7 section added; awaiting Codex review / user closeout**
+- Status: **Claude review accepted; Codex (Cursor) re-review accepted; awaiting user closeout / promotion decision on Task 7**
 - Implementer: Cursor (Claude then Codex review after the implementation report)
 - Public promotion / leaderboard submission: **authorized and completed**
   2026-08-06 for SHA `1986eedc…f859b3` (public AUC **0.96286**)
@@ -429,3 +429,78 @@ record confirms the submission itself is real and complete).
 Recorded in `docs/8_submission_manifest.md` (both submission events for
 the same artifact, noting they're identical content). No new artifact was
 generated; no code changed.
+
+## Cursor / Codex Review of Claude's Task 7 Report (2026-08-06)
+
+**Status: accept Claude's review and the subsequent fix confirmations.
+Task 7 technical work is complete pending the user's formal closeout.**
+
+Reviewed Claude's Task 7 review thread end-to-end against the current
+`main` tree (through `eb785cd`), not only the narrative.
+
+### On Claude's original review quality
+
+Claude's first pass was the right severity calibration:
+
+1. **Required finding #1 (dangling docs/7 section)** — **correct and
+   necessary.** The table row and `docs/8` pending note pointed at
+   §"Champion Submission-Mode Run (Task 7)" while only the HGB v1 section
+   existed. That is a real public-facing provenance gap, not nitpicking.
+   Independently confirmed resolved now: the section exists with Push /
+   Execution log / Environment / Artifact validation / Champion factory /
+   Leaderboard submission, and SHA/byte figures match the reviewed
+   artifact (`1986eedc…f859b3`, 7,752,126 bytes).
+2. **Independent verification claims** — **accepted.** Claude did not
+   rubber-stamp Cursor's report: fresh kernel download, validator rerun,
+   and a local submission-mode diff reproducing max abs ≈ `3.6e-12` are
+   the standard this project needs. Arithmetic `0.96286 − 0.96166 =
+   0.00120` checks out.
+3. **Non-blocking #3 (`~1e-12` → `3.6e-12`)** — **correct; now fixed** in
+   `docs/10_final_lessons.md` / README / docs/7.
+4. **Non-blocking #2 (notebook JSON `ensure_ascii` / list-of-lines
+   re-serialization)** — **correct diagnosis; still open.** Current
+   `02_baseline_modeling.ipynb` still stores em dashes as `\u2014`
+   (13 escapes; no literal `—` in the raw file). Not a correctness bug;
+   still worth a hygiene-only rewrite with `ensure_ascii=False` if we
+   touch the notebook again. Do **not** mix that into a scored-artifact
+   change.
+5. **Non-blocking #4 (README → `docs/collaboration/`)** — **correctly
+   deferred to the user.** Still present. Keep for process transparency,
+   or drop if the public README should stay technical-only.
+
+### On Claude's fix-confirmation pass
+
+Accepted. Required #1 and non-blocking #3 are closed; docs consistently
+show public AUC **0.96286**; notebook untouched in the docs-only fix
+commit as claimed.
+
+### On the kernel-native resubmission follow-up
+
+Accepted with one note:
+
+- Claude's correction of the earlier "Code Competition only" claim is
+  accurate and well-sourced (sibling `kaggle-s6e6` pattern;
+  `-k/-v/-f` submits an existing kernel output without re-execution).
+- Identical public score **0.96286** on the second submit is the right
+  check that content did not change.
+- `docs/8_submission_manifest.md` records both events; `docs/7`'s
+  Leaderboard line still cites the first (file-upload) timestamp only.
+  Non-blocking: optionally cross-link the kernel-native event in docs/7
+  for readers who land on the manifest first. Not a score/provenance
+  defect.
+
+### Residual open items (none block closeout)
+
+| # | Item | Blocks Task 7? |
+| --- | --- | --- |
+| 2 | Notebook JSON unicode / list-source hygiene | No |
+| 4 | README collaboration-folder link | No (user preference) |
+| — | docs/7 mention of kernel-native second submit | No |
+
+### Verdict
+
+Claude's Task 7 review did its job: one real gap caught, independent
+evidence checks, honest correction on the submit mechanism, and a clean
+hand-off. **No further Task 7 implementation is required from Cursor.**
+
+Ready for the user's formal Task 7 closeout / promotion decision.
