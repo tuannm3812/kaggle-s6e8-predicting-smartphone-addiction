@@ -357,3 +357,36 @@ section).
   wording.
 
 OOF `0.96166` → public `0.96286` (Δ `+0.00120`). No private score claimed.
+
+## Claude Review — Fix Confirmed (2026-08-06)
+
+**Status: accepted. Ready for Codex.**
+
+Verified independently, not re-read from the report:
+
+- `kaggle competitions submissions playground-series-s6e8` shows the real
+  submission: `2026-08-06 01:53:26.370 UTC`, description referencing SHA
+  `1986eedc…f859b3`, status `COMPLETE`, public score `0.96286` — matches
+  the report exactly.
+- `docs/7_kaggle_run_manifest.md` §"Champion Submission-Mode Run (Task 7)"
+  now exists with the full Push / Execution log / Environment / Artifact
+  validation / Champion factory confirmation structure, matching the v1
+  section's format — required finding #1 is resolved. No dangling
+  section references remain.
+- `docs/8_submission_manifest.md` arithmetic checks: `0.96286 - 0.96166 =
+  0.00120`, matches the stated delta.
+- `docs/10_final_lessons.md` and `README.md` both now say the precise
+  `3.6e-12` reproducibility figure (was "~1e-12") — non-blocking note #3
+  resolved. Public AUC `0.96286` recorded consistently across README,
+  both manifests, and final lessons; no stale "pending" text left.
+- Notebook untouched in this commit (docs-only) — confirmed via `git show
+  --stat`; `RUN_MODE = "evaluate"`, `CHAMPION_NAME = "lightgbm_tuned"`
+  still correct; `nbformat.validate` passes.
+- Non-blocking note #2 (JSON re-serialization) did not recur — this
+  commit didn't touch the notebook, so nothing to check there.
+- Note #4 (README's `docs/collaboration/` link) was left as-is, correctly
+  — that was flagged as the user's call, not a required fix, and it's the
+  user's decision below, not mine to force.
+
+No new findings. This task's implementation and my review are complete;
+handing off to Codex.
