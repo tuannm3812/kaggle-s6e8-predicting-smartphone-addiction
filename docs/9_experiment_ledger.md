@@ -441,3 +441,125 @@ kernel (`tuannm3812/smartphone-addiction-experiments-private`), per the
 established pattern for search/exploration work — not the public baseline
 kernel, and no leaderboard submission is in scope for this exploration
 regardless of outcome.
+
+## E03 — Results
+
+Executed on the private, GPU-enabled Kaggle experimentation kernel
+(`tuannm3812/smartphone-addiction-experiments-private`), version 8. This
+run also re-executed the full E01/E02 search from scratch (`RUN_MODE =
+"evaluate"` runs everything); the champion's OOF AUC reproduced exactly
+(`e01_lightgbm_c3` = `0.96166`, identical fold AUCs to every prior run),
+and E02's diversity-check numbers (Pearson `0.997563`, error-set Jaccard
+`0.8772`) also reproduced exactly.
+
+- Kaggle kernel status: `complete`.
+- Downloaded log: 18,569 bytes, SHA-256
+  `0cd48cf6dfea49070dc68fb8490731675ab863f31ba3e88e33a6b17116f48b21`.
+- Zero `error`/`traceback` output (the two lines containing "error" are
+  the pre-existing E02 section's own `error_jaccard` variable name and
+  its "Errors:" print label, not a Python exception — same pattern as
+  every prior run of this notebook).
+- Every number below is copied directly from the kernel's `print()`
+  output.
+
+### Feature counts
+
+Base feature set is the 12 raw columns. `e03_constrained_imputation`
+adds 10 columns (22 total); `e03_plus_frequency` adds 12 more (34 total);
+`e03_plus_target_encoding` adds 12 more at fit time inside each fold (46
+total, not a static column count since target encoding is refit per
+fold).
+
+### All three configurations, vs. champion `e01_lightgbm_c3` (OOF `0.96166`)
+
+| Candidate | OOF AUC | Fold std | Folds beaten (of 5) | Runtime (s) | Paired mean delta | 95% interval | Resamples positive | Corr. with champion |
+| --- | ---: | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| `e03_constrained_imputation` | 0.96173 | 0.00063 | 4 | 100 | +0.000071 | [-0.000064, 0.000205] | 163/200 | 0.99764 |
+| `e03_plus_frequency` | 0.96396 | 0.00058 | 5 | 127 | +0.002296 | [0.002041, 0.002551] | 200/200 | 0.99203 |
+| `e03_plus_target_encoding` | 0.96653 | 0.00046 | 5 | 158 | +0.004870 | [0.004501, 0.005286] | 200/200 | 0.97461 |
+
+"Resamples positive" is `probability_positive * 200`, rounded to the
+nearest whole resample count.
+
+### Individual fold AUCs
+
+| Candidate | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Fold 5 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `e03_constrained_imputation` | 0.96074 | 0.96152 | 0.96201 | 0.96266 | 0.96174 |
+| `e03_plus_frequency` | 0.96311 | 0.96381 | 0.96443 | 0.96476 | 0.96367 |
+| `e03_plus_target_encoding` | 0.96581 | 0.96668 | 0.96683 | 0.96712 | 0.96623 |
+
+Every fold improves monotonically from constrained-imputation-only →
++frequency → +target-encoding — the gain is consistent across folds, not
+driven by one lucky split.
+
+### Gate applied
+
+Per the predeclared rule (≥3/5 folds beaten, paired 95% interval entirely
+positive, probability of positive delta ≥0.95 — all three required):
+
+- `e03_constrained_imputation`: **fails.** 4/5 folds beaten, but the 95%
+  interval crosses zero (`[-0.000064, 0.000205]`) and
+  `probability_positive = 0.815 < 0.95`. Constrained imputation alone is
+  not distinguishable from noise against this champion — a genuinely
+  different result from what the raw fold-count might suggest, which is
+  exactly why the interval and probability conditions exist alongside the
+  fold-count one.
+- `e03_plus_frequency`: **clears.** 5/5 folds beaten, entirely positive
+  interval, 200/200 resamples positive.
+- `e03_plus_target_encoding`: **clears,** with the largest paired mean
+  delta of the three.
+
+**Recommendation: `e03_plus_target_encoding`** — the full stack
+(constrained imputation + frequency encoding + per-exact-value target
+encoding), still on the champion's exact `LGBM_CONFIGS[2]` hyperparameters
+(`n_estimators=400, learning_rate=0.05, num_leaves=63`).
+
+### What this does and does not support
+
+- **Attribution is real, not just "more features helped."** The additive
+  design isolates each step: constrained imputation alone is not
+  statistically distinguishable from the champion; frequency encoding on
+  top of it clears the gate with a modest, consistent gain
+  (`+0.0023`); target encoding on top of *that* roughly doubles the gain
+  again (`+0.0049` total) and is the largest single contributor. Fold
+  std also drops monotonically (`0.00063 → 0.00058 → 0.00046`) as more
+  representation is added — the winning configuration is not just higher
+  on average, it is more consistent fold-to-fold.
+- **Selection bias still applies**, same as E01/E02: three configurations
+  were compared against the same OOF data used to compute the paired
+  deltas, and the reported interval for the selected winner is likely
+  optimistic relative to its advantage on genuinely new data.
+- **No new hyperparameter search was layered in.** All three
+  configurations reuse the champion's exact `LGBM_CONFIGS[2]` values, so
+  this result is attributable to feature representation alone — it does
+  not test whether re-tuning hyperparameters on top of the new features
+  would help further (plausible, given the competitor notebook's edge
+  also included a properly tuned hyperparameter set on top of similar
+  features).
+- **Target encoding was fit correctly, leak-free:** `sklearn.preprocessing.
+  TargetEncoder(cv=5, ...)` was refit inside each of the 5 outer folds,
+  using only that fold's training rows, with the encoder's own internal
+  5-fold cross-fit — double cross-validation, matching the competitor
+  notebook's approach and standard practice for this technique.
+- **Not an apples-to-apples comparison to the competitor's score**, but
+  directionally informative: their `0.96945` is a *public leaderboard*
+  score, while `0.96653` here is *OOF*. Treating the gap loosely anyway —
+  champion OOF `0.96166` to their public `0.96945` is a `0.00779` gap;
+  `e03_plus_target_encoding`'s OOF closes `0.00487` of it, `≈62.5%`.
+  Our own champion's public score ran `+0.00120` above its OOF
+  (`docs/8_submission_manifest.md`); if a similar-sized gap held here
+  (not verified — no submission has been made for this candidate), the
+  public score could plausibly land close to or above the competitor's,
+  but that is speculation until actually tested, not a claim. The
+  remaining gap is plausibly the hyperparameter re-tuning this round
+  deliberately did not attempt.
+
+### Status
+
+**Not promoted.** This is a recommendation only, per the predeclared rule
+and the same process every prior candidate went through
+(`docs/collaboration/active_task.md`). `CHAMPION_NAME` remains
+`"lightgbm_tuned"`; no notebook/model state changed beyond adding this
+section. No public kernel push or leaderboard submission occurred or is
+in scope for this exploration.
