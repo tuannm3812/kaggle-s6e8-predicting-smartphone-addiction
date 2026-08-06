@@ -25,3 +25,15 @@ User authorized submit of the exact public-kernel version **2** artifact on
 `1986eedcf8f4adb7017494d5559e96fb50195c8bf32636a26927b3c2a6f859b3` — same
 bytes validated in `docs/7_kaggle_run_manifest.md` §"Champion Submission-Mode
 Run (Task 7)".
+
+Two submissions of this identical artifact exist in Kaggle's history:
+
+1. `2026-08-06 01:53:26.370 UTC` — uploaded as a local file
+   (`kaggle competitions submit -f <downloaded-file>`).
+2. `2026-08-06 12:52:06.880 UTC` — submitted directly from the kernel's own
+   output (`kaggle competitions submit -k
+   tuannm3812/smartphone-addiction-baseline-modeling -v 2 -f
+   submission.csv`), so the public score displays inline on the public
+   notebook page. Both scored **0.96286**, confirming identical content.
+   The kernel-native submission is the one that ties the score to the
+   notebook in Kaggle's own UI.

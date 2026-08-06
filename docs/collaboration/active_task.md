@@ -390,3 +390,42 @@ Verified independently, not re-read from the report:
 
 No new findings. This task's implementation and my review are complete;
 handing off to Codex.
+
+## Claude Follow-Up — Kernel-Native Resubmission (2026-08-06)
+
+**Status: complete, user-authorized.**
+
+The user asked why a sibling project (`kaggle-s6e6`) could submit "the
+whole notebook," with the public score shown directly on the notebook
+page, when Task 7's submission here was a plain-file upload. My initial
+answer (that this requires a "Code Competition") was **wrong** — corrected
+after checking `kaggle-s6e6-predicting-stellar-class/scratch/
+push_and_submit_notebook_3823.py`, which uses `kaggle competitions submit
+-k <kernel> -v <version> -f <output-filename>` against a regular
+Playground Series competition. That flag pair submits a kernel's own
+already-produced output directly (no re-execution, no local
+download/upload round-trip) and is not restricted to Code Competitions —
+the CLI help text's "(for code competitions)" wording only describes when
+it's *required*, not when it's *available*.
+
+User authorized resubmitting the same, already-reviewed v2 artifact this
+way. Ran:
+
+```
+$ kaggle competitions submit -c playground-series-s6e8 -k \
+    tuannm3812/smartphone-addiction-baseline-modeling -v 2 -f \
+    submission.csv -m "e01-lightgbm-v1 lightgbm_tuned (kernel-native \
+    submit, public notebook v2)"
+```
+
+Result: `2026-08-06 12:52:06.880 UTC`, `COMPLETE`, public AUC **0.96286**
+— identical to the file-upload submission, confirming same content. This
+submission is tied to kernel `tuannm3812/smartphone-addiction-baseline-
+modeling` version 2 in Kaggle's own systems, so the score displays inline
+on the public notebook page (not independently visually confirmed here —
+Kaggle's page is JS-rendered and not fetchable by tooling — but the API
+record confirms the submission itself is real and complete).
+
+Recorded in `docs/8_submission_manifest.md` (both submission events for
+the same artifact, noting they're identical content). No new artifact was
+generated; no code changed.
