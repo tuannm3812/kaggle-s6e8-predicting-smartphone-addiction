@@ -345,3 +345,99 @@ spending further budget on it was not cleared.
 working champion. Task 7 ("Publish Champion") can proceed against this
 candidate once authorized; no further Task 6 work (XGBoost, blend sweep)
 is implemented.
+
+## E03 — Post-Launch Feature-Representation Exploration
+
+Post-Task-7 exploration, prompted by reviewing a public competitor
+notebook for this same competition (`redamountassir/s6e8-
+histgradientboosting-lb-0-96945`, pulled via `kaggle kernels pull` and
+read directly — not just its title) scoring public AUC `0.96945`, well
+above our published `0.96286`. That notebook's edge comes from a
+different **feature representation**, not a different search budget on
+top of the same features: per-exact-value target encoding of all 12 raw
+columns (including the 9 numerics, treated as high-cardinality
+categoricals), frequency encoding of all 12 columns, and a
+domain-constraint-based imputation for `daily_screen_time_hours` and its
+three components. Our own E01/E02 search never varied feature
+representation — only model family and hyperparameters on top of native
+categorical/numeric handling. This section tests whether that specific
+gap explains part of the difference.
+
+**Verified before any modeling change:** the competitor's stated
+constraint — `daily_screen_time_hours >= social_media_hours +
+gaming_hours + work_study_hours` — was checked directly against our own
+`data/train.csv` and `data/test.csv` (not assumed from their notebook).
+Zero violations in 421,427 fully-complete train rows and 182,287
+fully-complete test rows (identical row count to their reported figure).
+30,398 train rows have `daily_screen_time_hours` missing with all three
+components present (constraint gives a lower bound); 128,622 train rows
+have exactly one component missing with `daily_screen_time_hours` present
+(constraint gives an upper bound and a midpoint estimate). This is real,
+checkable structure in our own data, not an assumption carried over from
+someone else's write-up.
+
+**Hypothesis:** adding (a) constraint-based imputation features for the
+screen-time group, (b) frequency encoding of all 12 raw columns, and (c)
+leak-free per-exact-value target encoding of all 12 raw columns —
+layered on top of the exact champion hyperparameters (`LGBM_CONFIGS[2]`:
+`n_estimators=400, learning_rate=0.05, num_leaves=63`), so only the
+feature representation changes, not the model or its tuning — improves
+OOF AUC over the current champion (`lightgbm_tuned`, OOF `0.96166`).
+
+**Design: isolate the feature-representation effect, not confirm the
+competitor's whole recipe.** Three ablation configurations, each strictly
+additive over the last, all using the *same* champion LightGBM
+hyperparameters so any AUC change is attributable to features, not a
+second round of tuning conflated with new features:
+
+1. `e03_constrained_imputation` — champion features + constrained
+   imputation (`ci_daily_lb`, `ci_missing_comp_ub`, `ci_missing_comp_mid`,
+   `ci_case`, `ci_n_missing`) + the ratio/rate features not already in the
+   base feature set (`screen_to_sleep_ratio`, `weekend_vs_daily_ratio`,
+   `app_opens_per_hour`, `notifications_per_hour`, `missing_count`). No
+   frequency or target encoding.
+2. `e03_plus_frequency` — (1) plus frequency encoding of all 12 raw
+   columns (count of each exact value across train+test combined; no
+   target used, leak-free by construction).
+3. `e03_plus_target_encoding` — (2) plus per-exact-value target encoding
+   of all 12 raw columns, via `sklearn.preprocessing.TargetEncoder(cv=5,
+   smooth="auto", shuffle=True, random_state=42, target_type="binary")`
+   fit **inside each of the 5 outer folds**, on that fold's training rows
+   only (double cross-validation — the encoder's own internal 5-fold
+   cross-fit prevents a training row's target from leaking into its own
+   encoded value, on top of the outer fold already holding out validation
+   rows entirely). This configuration is the closest replica of the
+   competitor's recipe, applied on our own already-tuned hyperparameters
+   rather than a fresh Optuna search.
+
+Not attempted in this round: an automated hyperparameter search on top of
+the new features (would conflate two effects, and this project's stated
+scope is hand-designed tuning only — see `docs/2_implementation_plan.md`)
+and a matching HGB-family comparison (deferred; the direct,
+decision-relevant question is whether these features help our own
+champion, not whether HGB is a better base family for them).
+
+**Promotion criteria (predeclared, identical structure to E01's, applied
+against the current champion `lightgbm_tuned` rather than the retired
+`v1c_hist_gradient_boosting`):** a configuration is recommended for
+promotion only if, against the champion's OOF predictions on the same
+folds:
+
+1. it beats the champion's fold AUC on a majority of folds (at least 3 of
+   5), **and**
+2. the paired stratified bootstrap's 95% interval lower bound is strictly
+   positive, **and**
+3. the bootstrap's probability of a positive delta is at least `0.95`.
+
+Bootstrap: 200 resamples, sample size 100,000, seed 42 — the same
+`paired_auc_bootstrap` function already used throughout this ledger. If no
+configuration clears the gate, `lightgbm_tuned` remains champion and every
+configuration's exact numbers are still recorded, including which specific
+ablation step helped or didn't — that attribution is the point of running
+three configurations instead of one.
+
+**Execution venue:** the private, GPU-enabled Kaggle experimentation
+kernel (`tuannm3812/smartphone-addiction-experiments-private`), per the
+established pattern for search/exploration work — not the public baseline
+kernel, and no leaderboard submission is in scope for this exploration
+regardless of outcome.
