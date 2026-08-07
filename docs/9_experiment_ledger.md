@@ -557,9 +557,97 @@ encoding), still on the champion's exact `LGBM_CONFIGS[2]` hyperparameters
 
 ### Status
 
-**Not promoted.** This is a recommendation only, per the predeclared rule
-and the same process every prior candidate went through
-(`docs/collaboration/active_task.md`). `CHAMPION_NAME` remains
-`"lightgbm_tuned"`; no notebook/model state changed beyond adding this
-section. No public kernel push or leaderboard submission occurred or is
-in scope for this exploration.
+**Promoted (Task 8, 2026-08-07).** The user directly authorized moving
+forward with `e03_plus_target_encoding` as the new champion candidate and
+running the freeze cycle. `CHAMPION_NAME` is now `"lightgbm_te_tuned"`,
+`NOTEBOOK_VERSION = "e03-target-encoding-v1"`. See "## Task 8 — E03
+Champion Freeze" below for the implementation and validation record. No
+public kernel push or leaderboard submission has occurred yet; both
+remain gated behind a separate, explicit go-ahead per the standing
+workflow rule.
+
+## Task 8 — E03 Champion Freeze
+
+**Context:** Section 11's evaluate-mode search only ever produced
+out-of-fold predictions — it never built a path that fits on all training
+rows and predicts on the actual competition test set. Promoting
+`e03_plus_target_encoding` required real implementation work beyond
+flipping a name, because target encoding needs a data-dependent transform
+step (`TargetEncoder.fit_transform`/`.transform`) that `build_model()` +
+`fit_model()`'s "estimator + fit kwargs" contract can't express, and the
+E03 exploration cells never touched the real `test` set at all.
+
+**What changed in `notebooks/02_baseline_modeling.ipynb`:**
+
+- The constrained-imputation, ratio, and frequency-encoding helper
+  functions (previously defined inside the `RUN_E03_EXPLORATION`-gated
+  cell, so unavailable in submission mode) were moved to an *unconditional*
+  cell: `add_constrained_imputation`, `add_e03_ratios`,
+  `build_e03_features`, `E03_FREQ_REFERENCE`, `add_e03_frequency`, plus
+  the shared constants `E03_CI_RATIO_COLUMNS`, `E03_FREQ_COLUMNS`,
+  `E03_TE_COLUMNS`, `E03_TE_KWARGS`. This is a pure reorganization — same
+  operations, same train+test-combined frequency reference, same
+  `TargetEncoder` parameters — verified behaviorally identical to what
+  version 8's recorded results above already ran (see the LGBM_CONFIGS[2],
+  frequency, and TE-parameter values line up exactly), so those numbers
+  were **not** rerun; the refactor only changes where the functions are
+  defined, not what they compute.
+- The evaluate-mode search cells (frequency computation, the 3-config
+  `run_cv` calls) now call these shared helpers instead of duplicating the
+  logic inline.
+- A new `fit_predict_target_encoded_lightgbm(X_train, y_train, X_test)`
+  function in Section 14 implements the full submission-mode pipeline:
+  builds CI/ratio/frequency features on train and test via the same
+  shared helpers, fits one `TargetEncoder(**E03_TE_KWARGS)` on all of
+  `X_train` (its own internal `cv=5` cross-fit keeps this leak-free) and
+  transforms `X_test`, then fits `build_model("lightgbm_te_tuned")` (the
+  unchanged `LGBM_CONFIGS[2]` hyperparameters) on the enriched training
+  set.
+- `build_model()` gained a `"lightgbm_te_tuned"` branch (same estimator
+  config as `"lightgbm_tuned"` — only the input features differ).
+  `fit_champion_and_predict()` now dispatches to
+  `fit_predict_target_encoded_lightgbm()` for this name instead of the
+  plain `fit_model()` path, since this candidate's features aren't a
+  subset of `X`'s existing columns.
+- Section 10's diversity check (`fit_predict_e02_lightgbm`) previously
+  asserted `CHAMPION_NAME == "lightgbm_tuned"` before running — that
+  assertion would now fail on every future evaluate-mode rerun, since it
+  intentionally re-checks a fixed historical comparison (Section 9's two
+  strongest configs), not "whichever model is champion now." Removed the
+  assertion and reworded the comment to make that explicit.
+- `CHAMPION_NAME = "lightgbm_te_tuned"`,
+  `NOTEBOOK_VERSION = "e03-target-encoding-v1"` in the config cell.
+  Section 13 ("Next Moves") and Section 14's intro markdown updated to
+  describe the new champion and pipeline instead of the retired one.
+
+**Local validation (not yet run on Kaggle):**
+
+1. 80/20 stratified holdout (`train_test_split`, `random_state=42`) using
+   the exact refactored pipeline: holdout AUC `0.96578`, 46 features,
+   10.1s. Close to the 5-fold OOF `0.96653` recorded above (a single
+   80/20 split is expected to be noisier than 5-fold CV, so this is a
+   plausibility check, not a reproduction) — consistent with correct,
+   non-leaking behavior rather than a bug (a leak would show
+   implausibly high; a bug would typically error or degrade sharply).
+2. Full run of `fit_predict_target_encoded_lightgbm(X, y, X_test)` against
+   the actual `data/train.csv`/`data/test.csv`, mirroring exactly what
+   Section 14 executes in submission mode: completed in 14.1s, produced a
+   `(296302, 2)` submission frame, all predictions finite and in `[0, 1]`,
+   `id` order matched `test["id"]` exactly.
+3. Notebook re-validated with `nbformat.validate` after all edits: valid,
+   every code cell still has `execution_count = null` and empty outputs
+   (source-only, matching every prior commit's convention).
+
+**Deviation from the standing review order, and why:** the established
+workflow is Cursor/Codex review of an exploration *before* any freeze
+cycle. That review has not happened for E03. The user directly authorized
+proceeding with the freeze cycle in the same turn as approving the E03
+recommendation itself (2026-08-07); given that direct authorization, and
+because all of the above is local/reversible (a `git revert` away, no
+public or leaderboard action taken), I proceeded with the implementation
+and local validation rather than blocking on a review step neither Cursor
+nor Codex have picked up yet. Pushing to the private Kaggle
+experimentation kernel (to validate the pipeline end-to-end in Kaggle's
+actual environment) is next; pushing to the *public* baseline kernel and
+any leaderboard submission remain gated behind a separate, explicit
+go-ahead, unchanged from every prior round.

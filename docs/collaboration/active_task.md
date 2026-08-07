@@ -596,3 +596,75 @@ $ git status --short --branch
 Clean, pushed. Notebook remains source-only (`execution_count = null`,
 empty outputs on all code cells); `RUN_MODE = "evaluate"`,
 `CHAMPION_NAME = "lightgbm_tuned"` unchanged throughout.
+
+## Claude Implementation Report — Task 8: E03 Champion Freeze (2026-08-07)
+
+**Status: local implementation + local validation complete. Private
+Kaggle kernel validation next. Public kernel push and leaderboard
+submission NOT done — both remain gated behind explicit user
+authorization.**
+
+### Why this exists
+
+Immediately after the E03 exploration report above, the user directly
+authorized moving forward: "yes help me to do 2," in response to my own
+question offering "Cursor/Codex review of this exploration, then (if
+approved) a fresh champion-freeze cycle like Task 7's" as the path if they
+wanted to promote `e03_plus_target_encoding`. Cursor/Codex have not yet
+reviewed the E03 exploration section — that review has not happened. I am
+flagging this explicitly rather than silently treating "yes" as covering
+it: the user's direct authorization is what I'm proceeding on, but the
+independent review step from the established workflow is still
+outstanding and worth looping in before this goes any further (public
+kernel, leaderboard).
+
+### What I built
+
+Full details and the exact diffs are in `docs/9_experiment_ledger.md`
+("## Task 8 — E03 Champion Freeze"). Summary:
+
+1. **Refactored** the E03 helper functions (constrained imputation,
+   ratios, frequency encoding) out of the `RUN_E03_EXPLORATION`-gated cell
+   into an unconditional one, so both evaluate-mode search and submission
+   mode call the exact same logic — the E01/Task-5 "single source of
+   truth" lesson applied here too. Verified this is a pure reorganization
+   (identical operations), so the already-recorded E03 evaluate results
+   (kernel version 8) did not need to be rerun.
+2. **Implemented** `fit_predict_target_encoded_lightgbm()` — the
+   submission-mode pipeline the E03 exploration never had: builds the
+   same features on train *and test*, fits one `TargetEncoder` on all of
+   `X_train`, transforms `X_test`, fits the champion's exact LightGBM
+   hyperparameters on the enriched training set. Wired into
+   `build_model("lightgbm_te_tuned")` and `fit_champion_and_predict()`.
+3. **Fixed a real latent bug**: Section 10's diversity check asserted
+   `CHAMPION_NAME == "lightgbm_tuned"` before running — that assertion
+   would have crashed any future full evaluate-mode rerun now that
+   `CHAMPION_NAME` has legitimately changed. Removed the assertion
+   (Section 10 is a fixed historical comparison, not a champion-tracking
+   check) and reworded the comment.
+4. **Flipped** `CHAMPION_NAME = "lightgbm_te_tuned"`,
+   `NOTEBOOK_VERSION = "e03-target-encoding-v1"`, and updated the two
+   markdown cells (Section 10 intro, Section 13, Section 14 intro) that
+   described the old champion.
+
+### Local validation
+
+- 80/20 holdout AUC `0.96578` (single split, 10.1s) — close to the
+  recorded 5-fold OOF `0.96653`, consistent with correct behavior.
+- Full local run of the actual submission pipeline against
+  `data/train.csv`/`data/test.csv`: 14.1s, valid `(296302, 2)` submission
+  frame, all predictions finite/in-range, `id` order verified.
+- `nbformat.validate` passes; every code cell still source-only
+  (`execution_count = null`, empty outputs).
+
+### What's still outstanding
+
+- Cursor/Codex review of the E03 exploration itself (never happened —
+  flagging again here so it doesn't get lost).
+- Independent review of this Task 8 implementation.
+- Push to the private experimentation kernel to confirm the pipeline runs
+  cleanly in Kaggle's actual environment (next step, in progress).
+- Public kernel push, `docs/7_kaggle_run_manifest.md` /
+  `docs/8_submission_manifest.md` updates, and any leaderboard submission
+  — none of this happens without a separate, explicit user go-ahead on
+  the specific artifact, same as every prior round.
