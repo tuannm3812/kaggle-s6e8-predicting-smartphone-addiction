@@ -657,13 +657,29 @@ Full details and the exact diffs are in `docs/9_experiment_ledger.md`
 - `nbformat.validate` passes; every code cell still source-only
   (`execution_count = null`, empty outputs).
 
+### Private Kaggle kernel validation (2026-08-07)
+
+Pushed to `tuannm3812/smartphone-addiction-experiments-private` with
+`RUN_MODE = "submission"` set transiently for the push only (the
+repository's tracked copy was restored to `"evaluate"` immediately after,
+via `git show HEAD:... > ...` — never `git checkout --`, per this
+project's standing rule against destructive restoration in the shared
+checkout). Kernel version 9, `complete`. Log confirms the shared E03
+helper cell now runs unconditionally (`"E03 helpers ready: ..."` printed
+in submission mode, which it never did before this refactor), then
+`NOTEBOOK_VERSION=e03-target-encoding-v1 CHAMPION_NAME=lightgbm_te_tuned`,
+then a clean `(296302, 2)` write at 83.1s. Zero errors/tracebacks.
+Downloaded artifact independently verified with
+`scripts/verify_submission.py`: 296,302 rows, 296,302 unique predictions,
+range `[0.00061, 0.99999...]`, SHA-256
+`ae077f730a7e7b395beb41338e7d8e86c42e458b17851df6dfb9c7ae48a2cf42`. Full
+detail in `docs/9_experiment_ledger.md`.
+
 ### What's still outstanding
 
 - Cursor/Codex review of the E03 exploration itself (never happened —
   flagging again here so it doesn't get lost).
 - Independent review of this Task 8 implementation.
-- Push to the private experimentation kernel to confirm the pipeline runs
-  cleanly in Kaggle's actual environment (next step, in progress).
 - Public kernel push, `docs/7_kaggle_run_manifest.md` /
   `docs/8_submission_manifest.md` updates, and any leaderboard submission
   — none of this happens without a separate, explicit user go-ahead on

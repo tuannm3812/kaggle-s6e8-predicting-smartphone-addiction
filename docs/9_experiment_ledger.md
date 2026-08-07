@@ -646,8 +646,34 @@ recommendation itself (2026-08-07); given that direct authorization, and
 because all of the above is local/reversible (a `git revert` away, no
 public or leaderboard action taken), I proceeded with the implementation
 and local validation rather than blocking on a review step neither Cursor
-nor Codex have picked up yet. Pushing to the private Kaggle
-experimentation kernel (to validate the pipeline end-to-end in Kaggle's
-actual environment) is next; pushing to the *public* baseline kernel and
-any leaderboard submission remain gated behind a separate, explicit
+nor Codex have picked up yet. The *public* baseline kernel push and any
+leaderboard submission remain gated behind a separate, explicit
 go-ahead, unchanged from every prior round.
+
+**Private Kaggle kernel validation (2026-08-07):** pushed the notebook to
+`tuannm3812/smartphone-addiction-experiments-private` with `RUN_MODE =
+"submission"` set transiently (not committed — the repository's tracked
+copy was restored to `RUN_MODE = "evaluate"` via `git show HEAD:... > ...`
+immediately after the push, matching the established pattern from the
+Task 7 baseline/champion submission-mode runs). Kernel version 9,
+status `complete`.
+
+- Log (2,747 bytes): `X: (691369, 12) ...` load, then
+  `"E03 helpers ready: 10 CI/ratio columns, 12 frequency columns, 12
+  target-encoding columns"` (confirms the shared-helper cell now executes
+  unconditionally, not just in evaluate mode), then
+  `"NOTEBOOK_VERSION=e03-target-encoding-v1 CHAMPION_NAME=lightgbm_te_tuned
+  SEED=42"`, then `"Wrote /kaggle/working/submission.csv: (296302, 2)"` at
+  83.1s (fit+predict ≈57s from the point features/encoder started). Zero
+  `error`/`traceback` lines. Only other log content is expected
+  stderr noise (VS Code debugger warnings, `nbconvert` `SyntaxWarning`s
+  from HTML-report generation) — the same pattern as every prior clean
+  run of this notebook.
+- Downloaded artifact independently verified with
+  `scripts/verify_submission.py`: 296,302 rows, 296,302 unique
+  predictions, range `[0.00061, 0.99999...]` — matches the local
+  full-data run's shape and range. SHA-256
+  `ae077f730a7e7b395beb41338e7d8e86c42e458b17851df6dfb9c7ae48a2cf42`.
+- This confirms the new pipeline runs cleanly end-to-end in Kaggle's
+  actual environment, not just locally. No public kernel push, no
+  leaderboard submission.
